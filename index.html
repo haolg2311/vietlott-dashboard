@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bảng phân tích Vietlott</title>
+<meta name="description" content="Chấm giá trị vé Mega 6/45 và Power 6/55 mỗi ngày. Không dự đoán số trúng.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Đến nội dung chính</a>
+<header class="hero">
+  <div class="wrap">
+    <div class="topline">
+      <p class="brand">Bảng phân tích Vietlott</p>
+      <p class="stamp" id="stamp">Đang tải số liệu</p>
+    </div>
+    <div class="lead">
+      <h1 id="headline">Đang tải nhận định</h1>
+      <div id="commentary" class="commentary"></div>
+    </div>
+    <div class="alerts" id="alerts"></div>
+    <div class="slips" id="slips"></div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <section aria-labelledby="value-title">
+    <h2 id="value-title">Vé đáng giá bao nhiêu theo từng kỳ</h2>
+    <p class="intro">Jackpot càng cao thì vé càng đáng giá. Mức bình quân cả năm là 55%, vì Vietlott trích 55% doanh thu vào quỹ trả thưởng.</p>
+    <div class="pair" id="value-charts"></div>
+    <div class="table-scroll"><table id="breakeven"></table></div>
+    <details><summary>Xem bảng số liệu từng kỳ</summary><div class="table-scroll" id="value-table"></div></details>
+  </section>
+
+  <section aria-labelledby="test-title">
+    <h2 id="test-title">Có đoán được số không</h2>
+    <p class="intro" id="test-intro"></p>
+    <div class="pair" id="test-charts"></div>
+    <div class="table-scroll"><table id="test-table"></table></div>
+  </section>
+
+  <section aria-labelledby="book-title">
+    <h2 id="book-title">Danh mục giả lập 100.000đ/tuần</h2>
+    <p class="intro" id="book-intro"></p>
+    <div class="facts" id="book-facts"></div>
+    <div id="book-chart" class="plot"></div>
+    <p class="note" id="book-note"></p>
+    <details><summary>Nhật ký nhận định</summary><div class="table-scroll" id="book-log"></div></details>
+  </section>
+
+  <section aria-labelledby="method-title">
+    <h2 id="method-title">Cách tính</h2>
+    <div class="method" id="method"></div>
+  </section>
+</main>
+
+<footer class="wrap footer">
+  <p>Trang này không dự đoán số trúng và không phải khuyến nghị tài chính. Chỉ dành cho người từ 18 tuổi. Chỉ chơi bằng số tiền có thể mất hết.</p>
+  <p>Trang độc lập, không liên kết với Vietlott. Luôn đối chiếu kết quả chính thức của Vietlott trước khi dò vé.</p>
+</footer>
+<div class="tip" id="tip" role="status" hidden></div>
+<script src="assets/app.js"></script>
+</body>
+</html>
