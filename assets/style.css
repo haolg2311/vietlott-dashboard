@@ -33,7 +33,7 @@ h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.12; letter-spacing: -.02e
 .alerts:empty { display: none; }
 .alerts { margin-top: 12px; padding: 10px 12px; background: #fff; color: var(--ink); border-left: 4px solid var(--gold); border-radius: 4px; font-size: 14px; }
 .alerts p { margin: 0; }
-.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
 .card { background: var(--surface); color: var(--ink); border-radius: 12px; padding: 16px; min-width: 0; }
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .card h2 { font-size: 19px; line-height: 1.25; margin: 0; }
@@ -59,8 +59,8 @@ h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.12; letter-spacing: -.02e
 .balls .sp { background: var(--gold); color: var(--ink); }
 .balls.sm li { width: 28px; height: 28px; font-size: 12px; }
 .switchbar { position: sticky; top: 0; z-index: 4; background: var(--page); padding: 10px 0; border-bottom: 1px solid var(--line); }
-.switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; max-width: 360px; }
-.switch button { font: inherit; font-size: 15px; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-height: 44px; cursor: pointer; }
+.switch { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; max-width: 480px; }
+.switch button { font: inherit; font-size: 14px; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-height: 44px; cursor: pointer; }
 .switch button[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #fff; }
 main section { padding-top: 26px; }
 main h2 { font-size: 20px; line-height: 1.25; margin: 0 0 10px; letter-spacing: -.01em; }
@@ -79,6 +79,7 @@ main h2 { font-size: 20px; line-height: 1.25; margin: 0 0 10px; letter-spacing: 
 .plot text { font-family: inherit; fill: var(--ink-2); font-size: 12px; }
 .marks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0 0; }
 .marks.four { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 14px; }
+.section-note:empty { display: none; }
 .section-note { margin: -4px 0 10px; font-size: 14px; color: var(--ink-2); max-width: 70ch; }
 .sub { font-size: 15px; margin: 0 0 8px; }
 .marks div { background: var(--surface); border-radius: 10px; padding: 10px 12px; }
@@ -95,13 +96,15 @@ summary { cursor: pointer; font-weight: 600; padding: 12px 0; min-height: 44px; 
 .more-info b { color: var(--ink); }
 .more-info a { color: var(--red); }
 .facts { display: grid; gap: 0; margin: 0 0 10px; }
-.facts div { display: grid; grid-template-columns: minmax(0, 1fr) 70px 70px; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.facts div { display: grid; grid-template-columns: minmax(0, 1fr) 56px 56px 56px; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
 .facts div > :not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
 .footer { padding-top: 20px; padding-bottom: 32px; padding-bottom: max(32px, env(safe-area-inset-bottom)); font-size: 13px; color: var(--ink-2); }
 .footer p { margin: 0 0 4px; }
 .tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: #fff; font-size: 13px; line-height: 1.4; padding: 6px 9px; border-radius: 6px; max-width: 240px; }
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .cards { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
   h1 { margin-top: 16px; }
   .switch { max-width: none; }
   .draws li.row { grid-template-columns: minmax(0, 1fr) auto; }

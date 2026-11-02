@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#b30f26">
 <title>Bảng phân tích Vietlott</title>
-<meta name="description" content="Nhận định hằng ngày cho Mega 6/45 và Power 6/55. Không dự đoán số trúng.">
+<meta name="description" content="Nhận định hằng ngày cho Mega 6/45, Power 6/55 và Lotto 5/35. Không dự đoán số trúng.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=6">
+<link rel="stylesheet" href="assets/style.css?v=7">
 </head>
 <body>
 <header class="hero">
@@ -31,6 +31,7 @@
     <div class="switch" role="group" aria-label="Chọn trò chơi">
       <button type="button" data-game="mega" aria-pressed="true">Mega 6/45</button>
       <button type="button" data-game="power" aria-pressed="false">Power 6/55</button>
+      <button type="button" data-game="lotto" aria-pressed="false">Lotto 5/35</button>
     </div>
   </div>
 </div>
@@ -44,6 +45,7 @@
 
   <section aria-labelledby="value-title">
     <h2 id="value-title">Giá trị vé theo kỳ</h2>
+    <p class="section-note" id="value-note"></p>
     <div class="plot" id="chart"></div>
     <dl class="marks" id="marks"></dl>
   </section>
@@ -67,6 +69,6 @@
   <p>Trang không dự đoán số trúng. Chỉ dành cho người từ 18 tuổi, chỉ chơi bằng số tiền có thể mất hết.</p>
 </footer>
 <div class="tip" id="tip" role="status" hidden></div>
-<script src="assets/app.js?v=6"></script>
+<script src="assets/app.js?v=7"></script>
 </body>
 </html>

@@ -40,6 +40,17 @@ GAMES = {
 }
 
 
+LOTTO = {"name": "Lotto 5/35", "file": "power535.jsonl", "seed_jp": 6e9, "trigger": 12e9, "near_draws": 6}
+LOTTO_BASE = {"g1": 10_000_000, "g2": 5_000_000, "g3": 500_000, "g4": 100_000, "g5": 30_000, "kk": 10_000}
+LOTTO_TOTAL = comb(35, 5) * 12
+LOTTO_ODDS = {
+    "jp": 1 / LOTTO_TOTAL, "g1": 11 / LOTTO_TOTAL, "g2": 150 / LOTTO_TOTAL, "g3": 1650 / LOTTO_TOTAL,
+    "g4": 4350 / LOTTO_TOTAL, "g5": 47850 / LOTTO_TOTAL,
+    "kk": (comb(35, 5) - 1 - 150 - 4350) / LOTTO_TOTAL,
+}
+LOTTO_SHARE = {"g1": 1 / 3, "g2": 1 / 6, "g3": 1 / 6, "g4": 1 / 6, "g5": 1 / 6}
+
+
 def net(prize):
     return prize - max(0, prize - TAX_FREE) * TAX_RATE
 
@@ -115,21 +126,22 @@ def breakeven(game, tickets, jackpot2):
 
 def load_draws(game):
     rows = []
-    for line in (DATA / "raw" / GAMES[game]["file"]).read_text().splitlines():
+    file, size = (LOTTO["file"], 5) if game == "lotto" else (GAMES[game]["file"], 6)
+    for line in (DATA / "raw" / file).read_text().splitlines():
         r = json.loads(line)
-        rows.append({"id": int(r["id"]), "date": r["date"], "main": r["result"][:6], "extra": r["result"][6:7]})
+        rows.append({"id": int(r["id"]), "date": r["date"], "main": r["result"][:size], "extra": r["result"][size:size + 1]})
     rows.sort(key=lambda r: r["id"])
     return rows
 
 
 def fetch_raw():
-    for game in GAMES.values():
-        target = DATA / "raw" / game["file"]
+    for file in [g["file"] for g in GAMES.values()] + [LOTTO["file"]]:
+        target = DATA / "raw" / file
         tmp = target.with_suffix(".tmp")
-        subprocess.run(["curl", "-sSf", "-m", "90", "-o", str(tmp), RAW_BASE + game["file"]], check=True)
-        if tmp.stat().st_size < target.stat().st_size:
+        subprocess.run(["curl", "-sSf", "-m", "90", "-o", str(tmp), RAW_BASE + file], check=True)
+        if target.exists() and tmp.stat().st_size < target.stat().st_size:
             tmp.unlink()
-            raise SystemExit(f"File tải về nhỏ hơn bản cũ, dừng để giữ dữ liệu: {game['file']}")
+            raise SystemExit(f"File tải về nhỏ hơn bản cũ, dừng để giữ dữ liệu: {file}")
         tmp.replace(target)
 
 
@@ -232,9 +244,10 @@ def fixed_prize(game, ticket, draw):
 
 
 def randomness(game, draws):
-    n_pool = GAMES[game]["pool"]
+    n_pool = 35 if game == "lotto" else GAMES[game]["pool"]
+    k = 5 if game == "lotto" else 6
     n = len(draws)
-    p = 6 / n_pool
+    p = k / n_pool
     counts = [0] * (n_pool + 1)
     for d in draws:
         for x in d["main"]:
@@ -251,9 +264,9 @@ def randomness(game, draws):
                 for x in d["main"]:
                     window[x] += 1
             order = sorted(range(1, n_pool + 1), key=lambda x: (-window[x], x) if reverse else (window[x], x))
-            hits.append(len(set(order[:6]) & set(draws[i]["main"])))
-        mu = 36 / n_pool
-        var = 6 * p * (1 - p) * (n_pool - 6) / (n_pool - 1)
+            hits.append(len(set(order[:k]) & set(draws[i]["main"])))
+        mu = k * k / n_pool
+        var = k * p * (1 - p) * (n_pool - k) / (n_pool - 1)
         zs = (mean(hits) - mu) / math.sqrt(var / len(hits))
         return {"mean": round(mean(hits), 3), "expected": round(mu, 3), "z": round(zs, 2),
                 "p": round(2 * norm.sf(abs(zs)), 3), "draws": len(hits)}
@@ -272,6 +285,8 @@ def filter_check(all_draws):
     wins = {"filter": 0, "random": 0}
     tickets = 0
     for game, draws in all_draws.items():
+        if game == "lotto":
+            continue
         pool = GAMES[game]["pool"]
         for i in range(1, len(draws)):
             main = set(draws[i]["main"])
@@ -280,7 +295,7 @@ def filter_check(all_draws):
                 wins["filter"] += len(main & set(pick_filtered(rng, pool, draws[i - 1]["main"]))) >= 3
                 wins["random"] += len(main & set(pick_random(rng, pool))) >= 3
                 tickets += 1
-    weights = {g: (len(d) - 1) * FULL_SIMS for g, d in all_draws.items()}
+    weights = {g: (len(d) - 1) * FULL_SIMS for g, d in all_draws.items() if g != "lotto"}
     theory = sum(w * sum(odds(g).values()) for g, w in weights.items()) / tickets
     return {
         "tickets": tickets,
@@ -290,10 +305,12 @@ def filter_check(all_draws):
     }
 
 
-def write_history(all_draws, valid_rows):
+def write_history(all_draws, valid_rows, lotto):
     """Lưu toàn bộ dãy số đã quay, mới nhất trước, kèm jackpot của các kỳ có số liệu."""
     out = {}
     for game, draws in all_draws.items():
+        if game == "lotto":
+            continue
         rows = {r["id"]: r for r in valid_rows[game]}
         items = []
         for d in reversed(draws):
@@ -305,19 +322,182 @@ def write_history(all_draws, valid_rows):
                     item.update(jackpot2=r["jackpot2"], winners2=r["jackpot2_winners"])
             items.append(item)
         out[game] = items
+    rows = {r["id"]: r for r in lotto["rows"]}
+    rolled = {x["id"] for x in lotto["rolldowns"]}
+    ids = {d["id"]: d for d in all_draws["lotto"]}
+    ids[lotto["latest"]["id"]] = lotto["latest"]
+    items = []
+    for i in sorted(ids, reverse=True):
+        d = ids[i]
+        item = {"id": d["id"], "date": d["date"], "main": d["main"], "extra": d["extra"]}
+        if i in rows:
+            item.update(jackpot=rows[i]["jackpot"], winners=rows[i]["jackpot_winners"])
+        if i in rolled:
+            item["rolldown"] = True
+        items.append(item)
+    out["lotto"] = items
     (DATA / "history.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+
+def lotto_fixed_ev():
+    return sum(LOTTO_ODDS[k] * net(LOTTO_BASE[k]) for k in LOTTO_BASE)
+
+
+def rolldown_ev(jackpot, tickets):
+    """Giá trị một vé ở kỳ chia giải, giả định đủ hạng có người trúng và chọn số đều."""
+    paid = 0.0
+    for tier, share in LOTTO_SHARE.items():
+        pool = jackpot * share
+        winners = max(tickets * LOTTO_ODDS[tier], 1)
+        paid += winners * net(pool / winners + LOTTO_BASE[tier]) - winners * LOTTO_BASE[tier]
+    extra = paid / tickets
+    total = extra + lotto_fixed_ev()
+    return {"share": round(extra), "fixed": round(lotto_fixed_ev()), "total": round(total), "pct": round(total / TICKET * 100, 1)}
+
+
+def draw_slot(draws, last):
+    """Kỳ số lẻ trong ngày là 13h, kỳ thứ hai là 21h."""
+    same_day = [d for d in draws if d["date"] == last["date"] and d["id"] <= last["id"]]
+    return "21h" if len(same_day) >= 2 else "13h"
+
+
+def step_draw(day, slot):
+    return (day, "21h") if slot == "13h" else (day + timedelta(days=1), "13h")
+
+
+def lotto_uncrowded(nums, last_main):
+    nums = sorted(nums)
+    if not any(n > 31 for n in nums):
+        return False
+    run = best = 1
+    for a, b in zip(nums, nums[1:]):
+        run = run + 1 if b == a + 1 else 1
+        best = max(best, run)
+    tails = {}
+    for n in nums:
+        tails[n % 10] = tails.get(n % 10, 0) + 1
+    return best < 3 and max(tails.values()) <= 2 and len(set(nums) & set(last_main)) < 3
+
+
+def pick_lotto(rng, last_main):
+    while True:
+        nums = rng.sample(range(1, 36), 5)
+        if lotto_uncrowded(nums, last_main):
+            return sorted(nums) + [rng.randint(1, 12)]
+
+
+def lotto_prize(ticket, row):
+    main, special = set(row["numbers"][:5]), row["numbers"][5]
+    hit, sp = len(set(ticket[:5]) & main), ticket[5] == special
+    if hit == 5:
+        return (0, "jackpot") if sp else (net(row["values"]["g1"]), None)
+    if hit == 4:
+        return net(row["values"]["g2"] if sp else row["values"]["g3"]), None
+    if hit == 3:
+        return net(row["values"]["g4"] if sp else row["values"]["g5"]), None
+    return (LOTTO_BASE["kk"] if sp else 0), None
+
+
+def lotto_block(draws, store, warnings, today):
+    by_id = {d["id"]: d for d in draws}
+    rows = []
+    for r in sorted(store["rows"], key=lambda x: x["id"]):
+        d = by_id.get(r["id"])
+        if d is not None and (d["main"] + d["extra"] != r["numbers"] or d["date"] != r["date"]):
+            warnings.append(f"Lotto 5/35 kỳ {r['id']}: hai nguồn lệch nhau, đã bỏ kỳ này.")
+            continue
+        rows.append(r)
+    known = {x["id"] for x in store["rolldowns"]}
+    for r in rows:
+        if r["jackpot_winners"] == 0 and r["values"]["g2"] > LOTTO_BASE["g2"] and r["id"] not in known:
+            store["rolldowns"].append({"id": r["id"], "date": r["date"], "jackpot": r["jackpot"],
+                                       "tickets": round(r["winners"]["kk"] / LOTTO_ODDS["kk"], -4),
+                                       "basis": "Suy từ số giải Khuyến khích"})
+    store["rolldowns"].sort(key=lambda x: x["id"])
+
+    last = rows[-1]
+    last_raw = draws[-1]
+    if last["id"] < last_raw["id"]:
+        warnings.append(f"Lotto 5/35: thiếu Độc đắc kỳ {last_raw['id']}, số ước tính có thể cũ.")
+    if last["id"] > last_raw["id"]:
+        draws = draws + [{"id": last["id"], "date": last["date"], "main": last["numbers"][:5], "extra": last["numbers"][5:]}]
+    latest = draws[-1]
+    day, slot = date.fromisoformat(latest["date"]), draw_slot(draws, latest)
+    rises = [b["jackpot"] - a["jackpot"] for a, b in zip(rows, rows[1:]) if b["jackpot"] > a["jackpot"]][-5:]
+    step = mean(rises) if rises else 240e6
+    tickets = mean(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in rows[-3:])
+    jackpot = last["jackpot"] if last["jackpot_winners"] == 0 and last["values"]["g2"] == LOTTO_BASE["g2"] else LOTTO["seed_jp"]
+    armed_date = None
+    if jackpot > LOTTO["trigger"]:
+        run = [r for r in rows if r["jackpot"] > LOTTO["trigger"] and r["jackpot_winners"] == 0 and r["values"]["g2"] == LOTTO_BASE["g2"]]
+        armed_date = date.fromisoformat(run[0]["date"]) + timedelta(days=1)
+
+    next_day, next_slot = step_draw(day, slot)
+    next_id = latest["id"] + 1
+    draws_to = 0 if armed_date else max(1, math.ceil((LOTTO["trigger"] - jackpot + 1) / step))
+    if armed_date:
+        target_day = armed_date
+    else:
+        reach_day, reach_slot = day, slot
+        for _ in range(draws_to):
+            reach_day, reach_slot = step_draw(reach_day, reach_slot)
+        target_day = reach_day + timedelta(days=1)
+    gap = 0
+    d_, s_ = next_day, next_slot
+    while (d_, s_) != (target_day, "21h"):
+        d_, s_ = step_draw(d_, s_)
+        gap += 1
+    target_id = next_id + gap
+    est_jackpot = jackpot + step * (gap + 1)
+    ratio = store["rolldowns"][-1]["tickets"] / store["rolldowns"][-1]["jackpot"]
+    est_tickets = est_jackpot * ratio
+    roll = rolldown_ev(est_jackpot, est_tickets)
+    is_rolldown = armed_date is not None and (next_day, next_slot) == (armed_date, "21h")
+    status = "rolldown" if is_rolldown else "armed" if armed_date else "near" if draws_to <= LOTTO["near_draws"] else "normal"
+
+    fixed = lotto_fixed_ev()
+    jp = LOTTO_ODDS["jp"] * net(jackpot + step) * share_factor(tickets, LOTTO_ODDS["jp"])
+    ev = {"fixed": round(fixed), "jackpot": round(jp), "jackpot2": 0, "total": round(fixed + jp), "pct": round((fixed + jp) / TICKET * 100, 1)}
+    if is_rolldown:
+        ev = {"fixed": roll["fixed"], "jackpot": roll["share"], "jackpot2": 0, "total": roll["total"], "pct": roll["pct"]}
+    if is_rolldown and roll["pct"] >= 100:
+        label, count = "Chơi", WEEK_TICKETS
+    elif is_rolldown:
+        label, count = verdict(roll["pct"])
+    else:
+        label, count = "Nghỉ", 0
+    rng = seeded("set", "lotto", next_id)
+    sets = [pick_lotto(rng, latest["main"]) for _ in range(max(count, LIGHT_TICKETS))]
+    book = [dict(x, value=rolldown_ev(x["jackpot"], x["tickets"])["total"], pct=rolldown_ev(x["jackpot"], x["tickets"])["pct"]) for x in store["rolldowns"]]
+    return {
+        "game": "lotto", "name": LOTTO["name"], "id": next_id, "date": next_day.isoformat(), "slot": next_slot,
+        "weekday": WEEKDAYS[next_day.weekday()], "jackpot": round(jackpot + step, -6), "jackpot2": 0,
+        "tickets_est": round(tickets, -3), "ev": ev, "verdict": label, "tickets": count, "sets": sets,
+        "status": status, "current_jackpot": jackpot, "trigger": LOTTO["trigger"], "draws_to": draws_to,
+        "target": {"id": target_id, "date": target_day.isoformat(), "weekday": WEEKDAYS[target_day.weekday()],
+                   "jackpot": round(est_jackpot, -7), "tickets": round(est_tickets, -4), "ev": roll},
+        "rolldowns": book, "rows": rows, "latest": latest,
+    }
 
 
 def week_start(d):
     return d - timedelta(days=d.weekday())
 
 
-def update_portfolio(next_rows, all_draws, today):
+def update_portfolio(next_rows, all_draws, today, lotto_rows):
     path = DATA / "portfolio.json"
     ledger = json.loads(path.read_text()) if path.exists() else []
     by_id = {g: {d["id"]: d for d in draws} for g, draws in all_draws.items()}
+    lotto_by_id = {r["id"]: r for r in lotto_rows}
     for e in ledger:
-        if e["status"] == "pending" and e["id"] in by_id[e["game"]]:
+        if e["status"] == "pending" and e["game"] == "lotto" and e["id"] in lotto_by_id:
+            row = lotto_by_id[e["id"]]
+            res = [lotto_prize(t, row) for t in e["tickets"]]
+            base = [lotto_prize(t, row) for t in e["baseline"]]
+            e.update(status="done", date=row["date"], returned=sum(r[0] for r in res),
+                     returned_baseline=sum(r[0] for r in base),
+                     jackpot_hits=[r[1] for r in res if r[1]], numbers=row["numbers"])
+        elif e["status"] == "pending" and e["game"] != "lotto" and e["id"] in by_id[e["game"]]:
             draw = by_id[e["game"]][e["id"]]
             res = [fixed_prize(e["game"], t, draw) for t in e["tickets"]]
             base = [fixed_prize(e["game"], t, draw) for t in e["baseline"]]
@@ -328,14 +508,17 @@ def update_portfolio(next_rows, all_draws, today):
     for row in sorted(next_rows, key=lambda r: r["date"]):
         if any(e["game"] == row["game"] and e["id"] == row["id"] for e in ledger):
             continue
+        if row["game"] == "lotto" and row["tickets"] == 0:
+            continue
         ws = week_start(date.fromisoformat(row["date"]))
         used = sum(len(e["tickets"]) for e in ledger if week_start(date.fromisoformat(e["date"])) == ws)
         count = min(row["tickets"], max(0, WEEK_TICKETS - used))
         rng = seeded("base", row["game"], row["id"])
+        pick = (lambda: pick_random(rng, 35)[:5] + [rng.randint(1, 12)]) if row["game"] == "lotto" else (lambda: pick_random(rng, GAMES[row["game"]]["pool"]))
         ledger.append({
             "game": row["game"], "id": row["id"], "date": row["date"], "verdict": row["verdict"],
             "ev_pct": row["ev"]["pct"], "tickets": row["sets"][:count],
-            "baseline": [pick_random(rng, GAMES[row["game"]]["pool"]) for _ in range(count)],
+            "baseline": [pick() for _ in range(count)],
             "status": "pending",
         })
     path.write_text(json.dumps(ledger, ensure_ascii=False, indent=1) + "\n")
@@ -415,29 +598,49 @@ def main():
         be[game] = breakeven(game, tickets, est["jackpot2"])
         tests[game] = randomness(game, draws)
 
-    portfolio = update_portfolio(next_rows, all_draws, today)
-    write_history(all_draws, valid_rows)
+    store = json.loads((DATA / "lotto.json").read_text())
+    lotto_draws = load_draws("lotto")
+    lotto = lotto_block(lotto_draws, store, warnings, today)
+    (DATA / "lotto.json").write_text(json.dumps(store, ensure_ascii=False, indent=0) + "\n")
+    tests["lotto"] = randomness("lotto", lotto_draws)
+    if lotto["status"] in ("near", "armed", "rolldown"):
+        for r in next_rows:
+            r["hold"] = True
+            r["verdict"] = "Giữ vé" if r["tickets"] else r["verdict"]
+            r["tickets"] = 0
+    lotto_card = {k: v for k, v in lotto.items() if k not in ("rows", "rolldowns", "latest")}
+    all_rows = next_rows + [lotto_card]
+    portfolio = update_portfolio(all_rows, all_draws, today, lotto["rows"])
+    write_history({**all_draws, "lotto": lotto_draws}, valid_rows, lotto)
+    latest["lotto"] = {
+        "id": lotto["latest"]["id"], "date": lotto["latest"]["date"],
+        "weekday": WEEKDAYS[date.fromisoformat(lotto["latest"]["date"]).weekday()],
+        "main": lotto["latest"]["main"], "extra": lotto["latest"]["extra"],
+        "jackpot": lotto["rows"][-1]["jackpot"], "jackpot_winners": lotto["rows"][-1]["jackpot_winners"],
+    }
     commentary_file = DATA / "commentary.json"
     commentary = json.loads(commentary_file.read_text()) if commentary_file.exists() else {}
     if commentary.get("date") != today.isoformat():
-        best = max(next_rows, key=lambda r: r["ev"]["pct"])
-        all_rest = all(r["tickets"] == 0 for r in next_rows)
+        best = max(all_rows, key=lambda r: r["ev"]["pct"])
+        all_rest = all(r["tickets"] == 0 for r in all_rows)
         commentary = {
             "date": today.isoformat(), "auto": True,
-            "headline": "Hai kỳ tới chưa đáng mua vé." if all_rest else f"{best['name']} là kỳ đáng cân nhắc nhất.",
+            "headline": "Các kỳ tới chưa đáng mua vé." if all_rest else f"{best['name']} là kỳ đáng cân nhắc nhất.",
             "paragraphs": [f"{best['name']} đang có giá trị kỳ vọng cao hơn, khoảng {best['ev']['total']:,}đ trên vé 10.000đ.".replace(",", ".")],
         }
     out = {
         "generated_at": now.isoformat(timespec="minutes"), "today": today.isoformat(),
         "weekday": WEEKDAYS[today.weekday()], "commentary": commentary, "warnings": warnings,
-        "next": sorted(next_rows, key=lambda r: r["date"]), "latest": latest, "ev_history": ev_history,
+        "next": sorted(all_rows, key=lambda r: (r["date"], r["game"] != "lotto")), "latest": latest, "ev_history": ev_history,
+        "rolldowns": lotto["rolldowns"], "lotto_fixed": round(lotto_fixed_ev()), "lotto_odds": {k: round(1 / v) for k, v in LOTTO_ODDS.items()},
+        "lotto_breakeven": {str(j): round(0.95 * j * 1e9 / (TICKET - lotto_fixed_ev()), -4) for j in (13, 20, 30)},
         "breakeven": be, "tests": tests, "portfolio": portfolio, "filter_check": filter_check(all_draws),
         "rules": {"ticket": TICKET, "play_pct": PLAY_PCT, "light_pct": LIGHT_PCT, "play_tickets": PLAY_TICKETS,
                   "light_tickets": LIGHT_TICKETS, "week_tickets": WEEK_TICKETS, "hot_window": HOT_WINDOW},
         "odds": {g: {k: round(1 / v) for k, v in odds(g).items()} for g in GAMES},
     }
     (DATA / "dashboard.json").write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
-    print(json.dumps({"next": [(r["name"], r["id"], r["date"], r["ev"], r["verdict"]) for r in out["next"]],
+    print(json.dumps({"next": [(r["name"], r["id"], r["date"], r["ev"], r["verdict"], r.get("status")) for r in out["next"]],
                       "warnings": warnings}, ensure_ascii=False))
 
 

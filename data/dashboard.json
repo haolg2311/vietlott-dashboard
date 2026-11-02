@@ -1,16 +1,71 @@
 {
- "generated_at": "2026-11-02T14:13+07:00",
+ "generated_at": "2026-11-02T14:56+07:00",
  "today": "2026-11-02",
  "weekday": "Thứ 2",
  "commentary": {
   "date": "2026-11-02",
-  "headline": "Hai kỳ tới đều nên nghỉ.",
+  "headline": "Các kỳ tới nên nghỉ.",
   "paragraphs": [
-   "Vé Power kỳ 1419 có giá trị 3.340đ (33,4%), vé Mega kỳ 1584 có giá trị 4.019đ (40,2%), đều dưới ngưỡng 45%. Nhận định đổi khi jackpot Mega đạt khoảng 30,2 tỷ đồng hoặc Power đạt khoảng 77,3 tỷ đồng."
+   "Power đạt 33,4%, Mega đạt 40,2% và Lotto đạt 37,6% giá vé, đều dưới mốc 45%. Lotto 5/35 còn khoảng 15 kỳ nữa mới tới mốc chia giải 12 tỷ nếu chưa có người trúng."
   ]
  },
  "warnings": [],
  "next": [
+  {
+   "game": "lotto",
+   "name": "Lotto 5/35",
+   "id": 984,
+   "date": "2026-11-02",
+   "slot": "21h",
+   "weekday": "Thứ 2",
+   "jackpot": 8989000000,
+   "jackpot2": 0,
+   "tickets_est": 217000.0,
+   "ev": {
+    "fixed": 1734,
+    "jackpot": 2021,
+    "jackpot2": 0,
+    "total": 3755,
+    "pct": 37.6
+   },
+   "verdict": "Nghỉ",
+   "tickets": 0,
+   "sets": [
+    [
+     1,
+     3,
+     5,
+     14,
+     34,
+     1
+    ],
+    [
+     9,
+     17,
+     22,
+     23,
+     35,
+     11
+    ]
+   ],
+   "status": "normal",
+   "current_jackpot": 8763075000,
+   "trigger": 12000000000.0,
+   "draws_to": 15,
+   "target": {
+    "id": 1000,
+    "date": "2026-11-10",
+    "weekday": "Thứ 3",
+    "jackpot": 12610000000,
+    "tickets": 1400000.0,
+    "ev": {
+     "share": 8619,
+     "fixed": 1734,
+     "total": 10354,
+     "pct": 103.5
+    }
+   }
+  },
   {
    "game": "power",
    "name": "Power 6/55",
@@ -119,6 +174,23 @@
     11
    ],
    "jackpot": 36604726050,
+   "jackpot_winners": 0
+  },
+  "lotto": {
+   "id": 983,
+   "date": "2026-11-02",
+   "weekday": "Thứ 2",
+   "main": [
+    2,
+    8,
+    10,
+    13,
+    30
+   ],
+   "extra": [
+    6
+   ],
+   "jackpot": 8763075000,
    "jackpot_winners": 0
   }
  },
@@ -548,6 +620,68 @@
    }
   ]
  },
+ "rolldowns": [
+  {
+   "id": 38,
+   "date": "2025-07-17",
+   "jackpot": 16000000000,
+   "tickets": 850000,
+   "basis": "Suy từ tiền thưởng báo đăng, kém chắc",
+   "value": 19677,
+   "pct": 196.8
+  },
+  {
+   "id": 54,
+   "date": "2025-07-25",
+   "jackpot": 19639152000,
+   "tickets": 1371000,
+   "basis": "Suy từ 16.836 giải Năm",
+   "value": 15404,
+   "pct": 154.0
+  },
+  {
+   "id": 492,
+   "date": "2026-03-01",
+   "jackpot": 24000000000,
+   "tickets": 2089000,
+   "basis": "Suy từ 25.653 giải Năm",
+   "value": 12709,
+   "pct": 127.1
+  },
+  {
+   "id": 584,
+   "date": "2026-04-16",
+   "jackpot": 22000000000,
+   "tickets": 1640000,
+   "basis": "Suy từ 63 giải Nhì, kém chắc",
+   "value": 14539,
+   "pct": 145.4
+  },
+  {
+   "id": 874,
+   "date": "2026-09-08",
+   "jackpot": 30000000000,
+   "tickets": 3330000,
+   "basis": "Suy từ 273.491 giải Khuyến khích",
+   "value": 10354,
+   "pct": 103.5
+  }
+ ],
+ "lotto_fixed": 1734,
+ "lotto_odds": {
+  "jp": 3895584,
+  "g1": 354144,
+  "g2": 25971,
+  "g3": 2361,
+  "g4": 896,
+  "g5": 81,
+  "kk": 12
+ },
+ "lotto_breakeven": {
+  "13": 1490000.0,
+  "20": 2300000.0,
+  "30": 3450000.0
+ },
  "breakeven": {
   "mega": {
    "45": 30200000000.0,
@@ -819,6 +953,106 @@
     "z": -0.13,
     "p": 0.897,
     "draws": 1388
+   }
+  },
+  "lotto": {
+   "draws": 982,
+   "first_id": 1,
+   "last_id": 982,
+   "first_date": "2025-06-29",
+   "chi2": 55.0,
+   "df": 34,
+   "p": 0.013,
+   "expected_count": 140.3,
+   "counts": [
+    141,
+    128,
+    139,
+    120,
+    121,
+    134,
+    148,
+    141,
+    131,
+    161,
+    151,
+    116,
+    147,
+    156,
+    150,
+    119,
+    133,
+    138,
+    145,
+    160,
+    129,
+    164,
+    146,
+    121,
+    134,
+    141,
+    146,
+    156,
+    140,
+    149,
+    119,
+    124,
+    151,
+    167,
+    144
+   ],
+   "z": [
+    0.07,
+    -1.12,
+    -0.12,
+    -1.85,
+    -1.76,
+    -0.57,
+    0.7,
+    0.07,
+    -0.85,
+    1.89,
+    0.98,
+    -2.21,
+    0.61,
+    1.43,
+    0.89,
+    -1.94,
+    -0.66,
+    -0.21,
+    0.43,
+    1.8,
+    -1.03,
+    2.16,
+    0.52,
+    -1.76,
+    -0.57,
+    0.07,
+    0.52,
+    1.43,
+    -0.03,
+    0.79,
+    -1.94,
+    -1.49,
+    0.98,
+    2.44,
+    0.34
+   ],
+   "outside": 3,
+   "outside_expected": 1.8,
+   "hot": {
+    "mean": 0.708,
+    "expected": 0.714,
+    "z": -0.26,
+    "p": 0.791,
+    "draws": 952
+   },
+   "cold": {
+    "mean": 0.692,
+    "expected": 0.714,
+    "z": -0.93,
+    "p": 0.354,
+    "draws": 952
    }
   }
  },
