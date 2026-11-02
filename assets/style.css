@@ -65,22 +65,25 @@ h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.12; letter-spacing: -.02e
 main section { padding-top: 26px; }
 main h2 { font-size: 20px; line-height: 1.25; margin: 0 0 10px; letter-spacing: -.01em; }
 .draws, .log { margin: 0; padding: 0; list-style: none; background: var(--surface); border-radius: 12px; }
-.draws li.row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 190px; gap: 8px 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.draws li.row { display: grid; grid-template-columns: 170px auto minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line); }
 .draws li.row:last-child, .log li.row:last-child { border-bottom: 0; }
-.when b { display: block; font-size: 15px; }
-.when span, .prize span { display: block; font-size: 13px; color: var(--ink-2); }
-.prize { text-align: right; }
-.prize b { display: block; font-size: 15px; }
-.prize .won { color: var(--good); font-weight: 600; }
+.when b { font-size: 14px; }
+.when span { font-size: 13px; color: var(--ink-2); }
+.log .when b, .log .when span { display: block; }
+.prize { text-align: right; font-size: 14px; font-weight: 600; }
+.prize .won { display: block; font-size: 13px; color: var(--good); }
 .more { display: block; width: 100%; font: inherit; font-size: 15px; font-weight: 600; color: var(--red); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-height: 44px; margin-top: 10px; cursor: pointer; }
 .more[hidden] { display: none; }
 .plot { position: relative; width: 100%; background: var(--surface); border-radius: 12px; padding: 14px 12px 8px; }
 .plot svg { display: block; width: 100%; overflow: visible; }
 .plot text { font-family: inherit; fill: var(--ink-2); font-size: 12px; }
 .marks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0 0; }
+.marks.four { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 14px; }
+.section-note { margin: -4px 0 10px; font-size: 14px; color: var(--ink-2); max-width: 70ch; }
+.sub { font-size: 15px; margin: 0 0 8px; }
 .marks div { background: var(--surface); border-radius: 10px; padding: 10px 12px; }
 .marks dt { font-size: 13px; color: var(--ink-2); }
-.marks dd { margin: 0; font-size: 18px; font-weight: 700; }
+.marks dd { margin: 0; font-size: 17px; font-weight: 700; }
 .log li.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
 .log .balls { grid-column: 1 / -1; }
 .log .wait { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); margin: 0; }
@@ -103,11 +106,13 @@ summary { cursor: pointer; font-weight: 600; padding: 12px 0; min-height: 44px; 
   .switch { max-width: none; }
   .draws li.row { grid-template-columns: minmax(0, 1fr) auto; }
   .draws li.row .balls { grid-column: 1 / -1; grid-row: 2; }
+  .marks.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 360px) {
   .balls li { width: 31px; height: 31px; font-size: 13px; }
   .twin b { font-size: 22px; }
   .marks { grid-template-columns: minmax(0, 1fr); }
+  .marks.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }

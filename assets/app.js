@@ -13,7 +13,7 @@
   const balls = (main, extra = [], cls = '') => `<ul class="balls ${cls}">${main.map((n) => `<li>${pad(n)}</li>`).join('')}${extra.map((n) => `<li class="sp">${pad(n)}</li>`).join('')}</ul>`;
   const vclass = { 'Nghỉ': 'v-rest', 'Chơi nhẹ': 'v-light', 'Chơi': 'v-play' };
   const names = { mega: 'Mega 6/45', power: 'Power 6/55' };
-  const state = { game: 'mega', shown: 10, data: null, hist: null };
+  const state = { game: 'mega', shown: 5, data: null, hist: null };
   const tip = $('tip');
 
   const showTip = (e, html) => {
@@ -26,12 +26,9 @@
   const hideTip = () => { tip.hidden = true; };
   addEventListener('scroll', hideTip, { passive: true });
 
-  function card(n) {
+  function card(n, last) {
     const power = n.game === 'power';
-    const sets = n.sets.map((s) => balls(s)).join('');
-    const picks = n.tickets
-      ? `<div class="picks"><h3>Gợi ý ${n.tickets} vé, bộ số tránh kiểu đông người chọn</h3>${sets}</div>`
-      : `<details><summary>Bộ số tham khảo</summary>${sets}</details>`;
+    const title = n.tickets ? `Gợi ý ${n.tickets} vé, bộ số tránh kiểu đông người chọn` : 'Bộ số tham khảo';
     return `<article class="card">
       <div class="card-head"><h2>${esc(n.name)}</h2><span class="verdict ${vclass[n.verdict]}">${esc(n.verdict)}</span></div>
       <p class="meta">Kỳ ${n.id}, ${esc(n.weekday)} ${dmy(n.date)}</p>
@@ -39,7 +36,9 @@
       <div><span>Giá trị vé 10.000đ</span><b>${money(n.ev.total)}</b></div></div>
       <div class="bar" role="img" aria-label="Giá trị vé bằng ${pct(n.ev.pct)} giá mua"><i style="width:${Math.min(100, n.ev.pct)}%"></i></div>
       <p class="bar-note">Bằng ${pct(n.ev.pct)} giá vé${power ? `, Jackpot 2 ước tính ${billions(n.jackpot2)}` : ''}</p>
-      ${picks}</article>`;
+      <div class="picks"><h3>${esc(title)}</h3>${n.sets.map((s) => balls(s)).join('')}</div>
+      <div class="picks"><h3>Kết quả kỳ trước, kỳ ${last.id}, ${day(last.date)} ${dm(last.date)}</h3>${balls(last.main, last.extra, 'sm')}
+      <p class="bar-note">${last.jackpot ? `${power ? 'Jackpot 1' : 'Jackpot'} ${billions(last.jackpot)}, ` : ''}${last.jackpot_winners ? `${last.jackpot_winners} người trúng` : 'chưa có người trúng'}</p></div></article>`;
   }
 
   function drawChart() {
@@ -68,8 +67,11 @@
   function drawGame() {
     const d = state.data, rows = state.hist[state.game], power = state.game === 'power';
     $('draws').innerHTML = rows.slice(0, state.shown).map((r) => {
-      const prize = r.jackpot ? `<b>${power ? 'Jackpot 1' : 'Jackpot'} ${billions(r.jackpot)}</b>${r.winners ? `<span class="won">${r.winners} người trúng jackpot</span>` : '<span>Chưa có người trúng</span>'}${power && r.jackpot2 ? `<span>Jackpot 2 ${billions(r.jackpot2)}${r.winners2 ? `, ${r.winners2} trúng` : ''}</span>` : ''}` : '';
-      return `<li class="row"><div class="when"><b>Kỳ ${r.id}</b><span>${day(r.date)} ${dmy(r.date)}</span></div>${balls(r.main, r.extra)}<div class="prize">${prize}</div></li>`;
+      const won = [];
+      if (r.winners) won.push(`${power ? 'JP1 ' : ''}${r.winners} người trúng`);
+      if (r.winners2) won.push(`JP2 ${r.winners2} người trúng`);
+      const value = !r.jackpot ? '' : power ? `JP1 ${billions(r.jackpot)}, JP2 ${billions(r.jackpot2)}` : `Jackpot ${billions(r.jackpot)}`;
+      return `<li class="row"><div class="when"><b>Kỳ ${r.id}</b> <span>${day(r.date)} ${dmy(r.date)}</span></div>${balls(r.main, r.extra, 'sm')}<div class="prize">${value}${won.length ? `<span class="won">${won.join(', ')}</span>` : ''}</div></li>`;
     }).join('');
     $('more').hidden = state.shown >= rows.length;
     const b = d.breakeven[state.game];
@@ -86,9 +88,16 @@
     const warn = [...d.warnings];
     if (stale) warn.unshift(`Trang chưa được cập nhật từ ${dmy(d.today)}, số liệu có thể đã cũ.`);
     $('alerts').innerHTML = warn.map((w) => `<p>${esc(w)}</p>`).join('');
-    $('cards').innerHTML = d.next.map(card).join('');
+    $('cards').innerHTML = d.next.map((n) => card(n, d.latest[n.game])).join('');
 
     const p = d.portfolio;
+    $('book-note').textContent = p.spent || p.week_used
+      ? `Theo dõi từ ${dmy(p.start)}, không phải tiền thật. Trần ${p.week_cap} vé mỗi tuần.`
+      : `Theo dõi từ ${dmy(p.start)}, không phải tiền thật. Số liệu đang bằng 0 vì các kỳ tới đều chấm Nghỉ, hệ thống chưa mua vé giả lập nào.`;
+    $('book-facts').innerHTML = `<div><dt>Đã dùng tuần này</dt><dd>${p.week_used}/${p.week_cap} vé</dd></div>
+      <div><dt>Đã chi</dt><dd>${money(p.spent)}</dd></div>
+      <div><dt>Thu về, bộ số gợi ý</dt><dd>${money(p.returned)}</dd></div>
+      <div><dt>Thu về, ngẫu nhiên</dt><dd>${money(p.returned_baseline)}</dd></div>`;
     $('log').innerHTML = p.log.slice(0, 8).map((e) => `<li class="row"><div class="when"><b>${names[e.game]}, kỳ ${e.id}</b><span>${day(e.date)} ${dmy(e.date)}, giá trị vé ${pct(e.ev_pct)}</span></div>
       <span class="verdict ${vclass[e.verdict]}">${esc(e.verdict)}</span>
       ${e.numbers ? balls(e.numbers.slice(0, 6), e.numbers.slice(6), 'sm') : '<p class="wait">Chờ kết quả</p>'}</li>`).join('');
@@ -109,7 +118,7 @@
 
   document.querySelectorAll('.switch button').forEach((btn) => btn.addEventListener('click', () => {
     state.game = btn.dataset.game;
-    state.shown = 10;
+    state.shown = 5;
     document.querySelectorAll('.switch button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
     drawGame();
   }));
