@@ -355,10 +355,9 @@ def rolldown_ev(jackpot, tickets):
     return {"share": round(extra), "fixed": round(lotto_fixed_ev()), "total": round(total), "pct": round(total / TICKET * 100, 1)}
 
 
-def draw_slot(draws, last):
-    """Kỳ số lẻ trong ngày là 13h, kỳ thứ hai là 21h."""
-    same_day = [d for d in draws if d["date"] == last["date"] and d["id"] <= last["id"]]
-    return "21h" if len(same_day) >= 2 else "13h"
+def draw_slot(draw_id):
+    """Mỗi ngày có 2 kỳ: kỳ số lẻ quay lúc 13h, kỳ số chẵn quay lúc 21h."""
+    return "13h" if draw_id % 2 else "21h"
 
 
 def step_draw(day, slot):
@@ -422,15 +421,19 @@ def lotto_block(draws, store, warnings, today):
     if last["id"] > last_raw["id"]:
         draws = draws + [{"id": last["id"], "date": last["date"], "main": last["numbers"][:5], "extra": last["numbers"][5:]}]
     latest = draws[-1]
-    day, slot = date.fromisoformat(latest["date"]), draw_slot(draws, latest)
+    day, slot = date.fromisoformat(latest["date"]), draw_slot(latest["id"])
     rises = [b["jackpot"] - a["jackpot"] for a, b in zip(rows, rows[1:]) if b["jackpot"] > a["jackpot"]][-5:]
     step = mean(rises) if rises else 240e6
     tickets = mean(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in rows[-3:])
     jackpot = last["jackpot"] if last["jackpot_winners"] == 0 and last["values"]["g2"] == LOTTO_BASE["g2"] else LOTTO["seed_jp"]
     armed_date = None
     if jackpot > LOTTO["trigger"]:
-        run = [r for r in rows if r["jackpot"] > LOTTO["trigger"] and r["jackpot_winners"] == 0 and r["values"]["g2"] == LOTTO_BASE["g2"]]
-        armed_date = date.fromisoformat(run[0]["date"]) + timedelta(days=1)
+        first = rows[-1]
+        for r in reversed(rows):
+            if r["jackpot"] <= LOTTO["trigger"] or r["jackpot_winners"] > 0 or r["values"]["g2"] != LOTTO_BASE["g2"]:
+                break
+            first = r
+        armed_date = date.fromisoformat(first["date"]) + timedelta(days=1)
 
     next_day, next_slot = step_draw(day, slot)
     next_id = latest["id"] + 1
