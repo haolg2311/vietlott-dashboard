@@ -29,6 +29,7 @@ TAX_RATE = 0.10
 PLAY_PCT, LIGHT_PCT = 55, 45
 PLAY_TICKETS, LIGHT_TICKETS = 5, 2
 HOT_WINDOW = 30
+EV_HISTORY = 30
 FULL_SIMS = 40
 FORWARD_START = "2026-11-02"
 WEEKDAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
@@ -150,16 +151,29 @@ def recent_tickets(game, rows):
     return mean(est_tickets(game, r) for r in rows[-3:])
 
 
-def est_next(game, rows, tickets):
-    """Ước tính jackpot kỳ kế tiếp theo phần tích lũy bình quân trên mỗi vé."""
+def est_next(game, rows):
+    """Jackpot kỳ tới bằng mức hiện tại cộng bình quân 2 bước tăng gần nhất của chu kỳ đang chạy.
+
+    Bước tăng phụ thuộc mạnh vào doanh số, mà doanh số đổi hẳn sau mỗi lần nổ jackpot, nên không
+    lấy bước của chu kỳ trước. Kỳ ngay sau khi nổ dùng bước đầu tiên của 4 chu kỳ gần nhất.
+    """
     keys = ["jackpot"] + (["jackpot2"] if game == "power" else [])
     out = {"jackpot2": 0}
     last = rows[-1]
     for key in keys:
         win_key = key + "_winners"
-        rates = [(b[key] - a[key]) / est_tickets(game, b)
-                 for a, b in zip(rows, rows[1:]) if a[win_key] == 0 and b[key] > a[key]][-5:]
-        step = mean(rates) * tickets if rates else 0
+        cycle, firsts = [], []
+        for a, b in zip(rows, rows[1:]):
+            if a[win_key] > 0:
+                cycle = []
+            elif b[key] > a[key]:
+                if not cycle:
+                    firsts.append(b[key] - a[key])
+                cycle.append(b[key] - a[key])
+        if last[win_key] > 0:
+            cycle = []
+        steps = cycle[-2:] or firsts[-4:]
+        step = mean(steps) if steps else 0
         base = last[key] if last[win_key] == 0 else (GAMES[game]["seed_jp"] if key == "jackpot" else 3e9)
         out[key] = base + step
     return out
@@ -374,7 +388,7 @@ def main():
             warnings.append(f"{info['name']}: dữ liệu kết quả dừng ở {last['date']}.")
 
         tickets = recent_tickets(game, rows)
-        est = est_next(game, rows, tickets)
+        est = est_next(game, rows)
         ev = ticket_ev(game, est["jackpot"], est["jackpot2"], tickets)
         label, count = verdict(ev["pct"])
         when = next_date(game, last_date)
@@ -396,7 +410,7 @@ def main():
         ev_history[game] = [
             {"id": r["id"], "date": r["date"], "jackpot": r["jackpot"], "winners": r["jackpot_winners"],
              "pct": ticket_ev(game, r["jackpot"], r.get("jackpot2", 0), est_tickets(game, r))["pct"]}
-            for r in rows
+            for r in rows[-EV_HISTORY:]
         ]
         be[game] = breakeven(game, tickets, est["jackpot2"])
         tests[game] = randomness(game, draws)
