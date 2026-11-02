@@ -7,8 +7,13 @@
   const dmy = (s) => s.split('-').reverse().join('/');
   const dm = (s) => s.split('-').slice(1).reverse().join('/');
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const color = (g) => `var(--${g})`;
+  const day = (s) => ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][new Date(s + 'T00:00:00').getDay()];
+  const pad = (n) => String(n).padStart(2, '0');
+  const num = (n) => Number(n).toLocaleString('vi-VN');
+  const balls = (main, extra = [], cls = '') => `<ul class="balls ${cls}">${main.map((n) => `<li>${pad(n)}</li>`).join('')}${extra.map((n) => `<li class="sp">${pad(n)}</li>`).join('')}</ul>`;
+  const vclass = { 'Nghỉ': 'v-rest', 'Chơi nhẹ': 'v-light', 'Chơi': 'v-play' };
+  const names = { mega: 'Mega 6/45', power: 'Power 6/55' };
+  const state = { game: 'mega', shown: 10, data: null, hist: null };
   const tip = $('tip');
 
   const showTip = (e, html) => {
@@ -21,169 +26,101 @@
   const hideTip = () => { tip.hidden = true; };
   addEventListener('scroll', hideTip, { passive: true });
 
-  const icons = {
-    'Nghỉ': '<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="2" width="3" height="8" fill="currentColor"/><rect x="7" y="2" width="3" height="8" fill="currentColor"/></svg>',
-    'Chơi nhẹ': '<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
-    'Chơi': '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9.5 10.5 2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
-  };
-  const vclass = { 'Nghỉ': 'v-rest', 'Chơi nhẹ': 'v-light', 'Chơi': 'v-play' };
-  const balls = (nums, extra = []) => '<ul class="balls">' + nums.map((n) => `<li>${String(n).padStart(2, '0')}</li>`).join('') +
-    extra.map((n) => `<li class="sp">${String(n).padStart(2, '0')}</li>`).join('') + '</ul>';
-
-  function slip(n, last) {
-    const seg = (v) => (v / 10000 * 100).toFixed(2) + '%';
-    const j2 = n.game === 'power';
-    const setsTitle = n.tickets ? `Bộ số cho ${n.tickets} vé, chọn tránh kiểu số đông người chọn` : 'Bộ số tham khảo nếu vẫn muốn mua';
-    return `<article class="slip" style="--c:${color(n.game)}">
-      <div class="slip-head"><div><h2>${esc(n.name)}</h2><p class="slip-date">Kỳ ${n.id}, ${esc(n.weekday)} ${dmy(n.date)}</p></div>
-      <span class="verdict ${vclass[n.verdict]}">${icons[n.verdict]}${esc(n.verdict)}</span></div>
-      <div class="value"><div class="value-num">${money(n.ev.total)}</div>
-      <div class="value-sub">giá trị kỳ vọng trên vé 10.000đ, bằng ${pct(n.ev.pct)}</div></div>
-      <div class="ticketbar" role="img" aria-label="Giá trị kỳ vọng ${pct(n.ev.pct)} giá vé">
-        <i class="fx" style="width:${seg(n.ev.fixed)}"></i><i class="j1" style="width:${seg(n.ev.jackpot)}"></i>${j2 ? `<i class="j2" style="width:${seg(n.ev.jackpot2)}"></i>` : ''}</div>
-      <ul class="key"><li><b style="background:var(--spent)"></b>Giải cố định ${money(n.ev.fixed)}</li>
-      <li><b style="background:var(--c)"></b>${j2 ? 'Jackpot 1' : 'Jackpot'} ${money(n.ev.jackpot)}</li>
-      ${j2 ? `<li><b style="background:var(--return)"></b>Jackpot 2 ${money(n.ev.jackpot2)}</li>` : ''}</ul>
-      <dl class="stats"><div><dt>${j2 ? 'Jackpot 1 ước tính' : 'Jackpot ước tính'}</dt><dd>${billions(n.jackpot)}</dd></div>
-      ${j2 ? `<div><dt>Jackpot 2 ước tính</dt><dd>${billions(n.jackpot2)}</dd></div>` : ''}
-      <div><dt>Vé bán ước tính</dt><dd>${(n.tickets_est / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 })} triệu</dd></div>
-      <div><dt>Số vé gợi ý</dt><dd>${n.tickets}</dd></div></dl>
-      <div class="sets"><h3>${esc(setsTitle)}</h3>${n.sets.map((s) => balls(s)).join('')}</div>
-      <div class="last">Kỳ ${last.id}, ${esc(last.weekday)} ${dmy(last.date)}${last.jackpot_winners ? ', có người trúng jackpot' : ', chưa có người trúng jackpot'}
-      ${balls(last.main, last.extra)}</div></article>`;
+  function card(n) {
+    const power = n.game === 'power';
+    const sets = n.sets.map((s) => balls(s)).join('');
+    const picks = n.tickets
+      ? `<div class="picks"><h3>Gợi ý ${n.tickets} vé, bộ số tránh kiểu đông người chọn</h3>${sets}</div>`
+      : `<details><summary>Bộ số tham khảo</summary>${sets}</details>`;
+    return `<article class="card">
+      <div class="card-head"><h2>${esc(n.name)}</h2><span class="verdict ${vclass[n.verdict]}">${esc(n.verdict)}</span></div>
+      <p class="meta">Kỳ ${n.id}, ${esc(n.weekday)} ${dmy(n.date)}</p>
+      <div class="twin"><div><span>${power ? 'Jackpot 1 ước tính' : 'Jackpot ước tính'}</span><b class="prime">${billions(n.jackpot)}</b></div>
+      <div><span>Giá trị vé 10.000đ</span><b>${money(n.ev.total)}</b></div></div>
+      <div class="bar" role="img" aria-label="Giá trị vé bằng ${pct(n.ev.pct)} giá mua"><i style="width:${Math.min(100, n.ev.pct)}%"></i></div>
+      <p class="bar-note">Bằng ${pct(n.ev.pct)} giá vé${power ? `, Jackpot 2 ước tính ${billions(n.jackpot2)}` : ''}</p>
+      ${picks}</article>`;
   }
 
-  function evChart(el, game, rows, rules) {
-    const render = () => {
-      const w = el.clientWidth, h = 230, m = { t: 14, r: 14, b: 26, l: 42 };
-      const iw = w - m.l - m.r, ih = h - m.t - m.b;
-      const top = Math.max(100, Math.ceil(Math.max(...rows.map((r) => r.pct)) / 20) * 20);
-      const x = (i) => m.l + (rows.length < 2 ? 0 : i * iw / (rows.length - 1));
-      const y = (v) => m.t + ih - v / top * ih;
-      const grid = [0, top / 2, top].map((v) => `<line x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`).join('');
-      const zone = `<rect x="${m.l}" width="${iw}" y="${y(rules.play_pct)}" height="${y(rules.light_pct) - y(rules.play_pct)}" fill="var(--band-fill)"/>`;
-      const line = rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(r.pct).toFixed(1)}`).join(' ');
-      const dots = rows.map((r, i) => `<circle cx="${x(i)}" cy="${y(r.pct)}" r="${r.winners ? 5 : 3}" fill="${r.winners ? 'var(--surface)' : color(game)}" stroke="${color(game)}" stroke-width="2"/>`).join('');
-      const hits = rows.map((r, i) => `<rect data-i="${i}" x="${x(i) - iw / rows.length / 2}" y="${m.t}" width="${iw / rows.length}" height="${ih}" fill="transparent"/>`).join('');
-      const ticks = [0, rows.length - 1].map((i) => `<text x="${x(i)}" y="${h - 6}" text-anchor="${i ? 'end' : 'start'}">Kỳ ${rows[i].id}</text>`).join('');
-      el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" height="${h}" role="img" aria-label="Giá trị kỳ vọng theo kỳ">${grid}${zone}<path d="${line}" fill="none" stroke="${color(game)}" stroke-width="2"/>${dots}${ticks}${hits}</svg>`;
-      el.querySelectorAll('rect[data-i]').forEach((node) => {
-        const r = rows[+node.dataset.i];
-        const on = (e) => showTip(e, `Kỳ ${r.id}, ${dmy(r.date)}<br>Jackpot ${billions(r.jackpot)}${r.winners ? ', có người trúng' : ''}<br>Giá trị vé ${pct(r.pct)}`);
-        node.addEventListener('pointermove', on);
-        node.addEventListener('pointerdown', on);
-        node.addEventListener('pointerleave', hideTip);
-      });
-    };
-    render();
-    new ResizeObserver(render).observe(el);
+  function drawChart() {
+    const el = $('chart'), rows = state.data.ev_history[state.game], rules = state.data.rules;
+    const w = el.clientWidth - 24, h = 200, m = { t: 8, r: 8, b: 24, l: 38 };
+    const iw = w - m.l - m.r, ih = h - m.t - m.b;
+    const top = Math.max(100, Math.ceil(Math.max(...rows.map((r) => r.pct)) / 20) * 20);
+    const x = (i) => m.l + i * iw / Math.max(1, rows.length - 1);
+    const y = (v) => m.t + ih - v / top * ih;
+    const grid = [0, top / 2, top].map((v) => `<line x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`).join('');
+    const zone = `<rect x="${m.l}" width="${iw}" y="${y(rules.play_pct)}" height="${y(rules.light_pct) - y(rules.play_pct)}" fill="var(--tint)"/>`;
+    const line = rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(r.pct).toFixed(1)}`).join(' ');
+    const dots = rows.map((r, i) => `<circle cx="${x(i)}" cy="${y(r.pct)}" r="${r.winners ? 5 : 3}" fill="${r.winners ? 'var(--gold)' : 'var(--red)'}" stroke="var(--red)" stroke-width="1.5"/>`).join('');
+    const hits = rows.map((r, i) => `<rect data-i="${i}" x="${x(i) - iw / rows.length / 2}" y="${m.t}" width="${iw / rows.length}" height="${ih}" fill="transparent"/>`).join('');
+    const ticks = [0, rows.length - 1].map((i) => `<text x="${x(i)}" y="${h - 6}" text-anchor="${i ? 'end' : 'start'}">Kỳ ${rows[i].id}</text>`).join('');
+    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" height="${h}" role="img" aria-label="Giá trị vé so với giá mua theo từng kỳ">${grid}${zone}<path d="${line}" fill="none" stroke="var(--red)" stroke-width="2"/>${dots}${ticks}${hits}</svg><p class="bar-note">Vùng hồng là mức chơi nhẹ, chấm vàng là kỳ có người trúng jackpot.</p>`;
+    el.querySelectorAll('rect[data-i]').forEach((node) => {
+      const r = rows[+node.dataset.i];
+      const on = (e) => showTip(e, `Kỳ ${r.id}, ${dmy(r.date)}<br>Jackpot ${billions(r.jackpot)}<br>Giá trị vé ${pct(r.pct)}`);
+      node.addEventListener('pointermove', on);
+      node.addEventListener('pointerdown', on);
+      node.addEventListener('pointerleave', hideTip);
+    });
   }
 
-  function zChart(el, game, t) {
-    const render = () => {
-      const w = el.clientWidth, h = 190, m = { t: 10, r: 6, b: 24, l: 34 };
-      const iw = w - m.l - m.r, ih = h - m.t - m.b, top = 3.5;
-      const y = (v) => m.t + ih / 2 - v / top * ih / 2;
-      const step = iw / t.z.length, bw = Math.max(1.5, step - 2);
-      const band = `<rect x="${m.l}" width="${iw}" y="${y(1.96)}" height="${y(-1.96) - y(1.96)}" fill="var(--band-fill)"/>`;
-      const labels = [3, 0, -3].map((v) => `<text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v > 0 ? '+' : ''}${v}</text>`).join('');
-      const bars = t.z.map((z, i) => {
-        const a = y(Math.max(z, 0)), b = y(Math.min(z, 0));
-        return `<rect x="${m.l + i * step + 1}" y="${a}" width="${bw}" height="${Math.max(1, b - a)}" rx="1" fill="${color(game)}"/>`;
-      }).join('');
-      const hits = t.z.map((z, i) => `<rect data-i="${i}" x="${m.l + i * step}" y="${m.t}" width="${step}" height="${ih}" fill="transparent"/>`).join('');
-      const ticks = [1, t.z.length].map((n) => `<text x="${m.l + (n - .5) * step}" y="${h - 6}" text-anchor="middle">Số ${n}</text>`).join('');
-      el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" height="${h}" role="img" aria-label="Độ lệch tần suất từng số">${band}<line x1="${m.l}" x2="${w - m.r}" y1="${y(0)}" y2="${y(0)}" stroke="var(--ink-3)"/>${labels}${bars}${ticks}${hits}</svg>`;
-      el.querySelectorAll('rect[data-i]').forEach((node) => {
-        const i = +node.dataset.i;
-        const on = (e) => showTip(e, `Số ${i + 1}: ra ${fmt(t.counts[i])} lần<br>Kỳ vọng ${fmt(t.expected_count)} lần<br>Độ lệch ${t.z[i].toLocaleString('vi-VN')}`);
-        node.addEventListener('pointermove', on);
-        node.addEventListener('pointerdown', on);
-        node.addEventListener('pointerleave', hideTip);
-      });
-    };
-    render();
-    new ResizeObserver(render).observe(el);
-  }
-
-  function draws(hist) {
-    const names = { mega: 'Mega 6/45', power: 'Power 6/55' };
-    const state = { game: 'mega', shown: 30 };
-    const draw = () => {
-      const rows = hist[state.game], show = rows.slice(0, state.shown), power = state.game === 'power';
-      $('draws-table').innerHTML = `<caption>${names[state.game]}, ${fmt(show.length)}/${fmt(rows.length)} kỳ gần nhất</caption><thead><tr><th>Kỳ</th><th>Ngày</th><th>Dãy số trúng</th><th>${power ? 'Jackpot 1' : 'Jackpot'}</th><th>Người trúng</th>${power ? '<th>Jackpot 2</th><th>Người trúng</th>' : ''}</tr></thead><tbody>` +
-        show.map((r) => `<tr style="--c:${color(state.game)}"><td>${r.id}</td><td>${dmy(r.date)}</td><td class="cell-balls">${balls(r.main, r.extra)}</td>
-          <td>${r.jackpot ? billions(r.jackpot) : 'Chưa có'}</td><td>${r.jackpot ? r.winners : 'Chưa có'}</td>
-          ${power ? `<td>${r.jackpot2 ? billions(r.jackpot2) : 'Chưa có'}</td><td>${r.jackpot2 ? r.winners2 : 'Chưa có'}</td>` : ''}</tr>`).join('') + '</tbody>';
-      $('draws-more').hidden = show.length >= rows.length;
-    };
-    document.querySelectorAll('.switch button').forEach((btn) => btn.addEventListener('click', () => {
-      state.game = btn.dataset.game;
-      state.shown = 30;
-      document.querySelectorAll('.switch button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-      draw();
-    }));
-    $('draws-more').addEventListener('click', () => { state.shown += 30; draw(); });
-    $('draws-intro').textContent = `Lưu đủ ${fmt(hist.mega.length)} kỳ Mega từ kỳ ${hist.mega[hist.mega.length - 1].id} và ${fmt(hist.power.length)} kỳ Power từ kỳ ${hist.power[hist.power.length - 1].id}, cập nhật mỗi ngày. Với Power, số tô đậm cuối dãy là số đặc biệt. Jackpot được lưu từ tháng 10/2026.`;
-    draw();
+  function drawGame() {
+    const d = state.data, rows = state.hist[state.game], power = state.game === 'power';
+    $('draws').innerHTML = rows.slice(0, state.shown).map((r) => {
+      const prize = r.jackpot ? `<b>${power ? 'Jackpot 1' : 'Jackpot'} ${billions(r.jackpot)}</b>${r.winners ? `<span class="won">${r.winners} người trúng jackpot</span>` : '<span>Chưa có người trúng</span>'}${power && r.jackpot2 ? `<span>Jackpot 2 ${billions(r.jackpot2)}${r.winners2 ? `, ${r.winners2} trúng` : ''}</span>` : ''}` : '';
+      return `<li class="row"><div class="when"><b>Kỳ ${r.id}</b><span>${day(r.date)} ${dmy(r.date)}</span></div>${balls(r.main, r.extra)}<div class="prize">${prize}</div></li>`;
+    }).join('');
+    $('more').hidden = state.shown >= rows.length;
+    const b = d.breakeven[state.game];
+    $('marks').innerHTML = `<div><dt>Chơi nhẹ từ</dt><dd>${billions(b['45'])}</dd></div><div><dt>Chơi từ</dt><dd>${billions(b['55'])}</dd></div><div><dt>Hòa vốn từ</dt><dd>${billions(b['100'])}</dd></div>`;
+    drawChart();
   }
 
   function render(d) {
+    state.data = d;
     const stale = (Date.now() - new Date(d.generated_at).getTime()) / 36e5 > 36;
-    $('stamp').textContent = `Cập nhật ${d.generated_at.slice(11, 16)}, ${d.weekday} ${dmy(d.today)}`;
+    $('stamp').textContent = `Cập nhật ${d.generated_at.slice(11, 16)} ${dm(d.today)}`;
     $('headline').textContent = d.commentary.headline;
     $('commentary').innerHTML = d.commentary.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('');
     const warn = [...d.warnings];
-    if (stale) warn.unshift(`Trang chưa được cập nhật từ ${dmy(d.today)}, các số dưới đây có thể đã cũ.`);
+    if (stale) warn.unshift(`Trang chưa được cập nhật từ ${dmy(d.today)}, số liệu có thể đã cũ.`);
     $('alerts').innerHTML = warn.map((w) => `<p>${esc(w)}</p>`).join('');
-    $('slips').innerHTML = d.next.map((n) => slip(n, d.latest[n.game])).join('');
+    $('cards').innerHTML = d.next.map(card).join('');
 
-    const names = { mega: 'Mega 6/45', power: 'Power 6/55' };
-    $('value-charts').innerHTML = Object.keys(names).map((g) => `<div class="chart"><h3>${names[g]}</h3><p>Giá trị kỳ vọng so với giá vé. Vùng nền là mức chơi nhẹ, chấm rỗng là kỳ có người trúng jackpot.</p><div class="plot" id="ev-${g}"></div></div>`).join('');
-    Object.keys(names).forEach((g) => evChart($('ev-' + g), g, d.ev_history[g], d.rules));
-    $('breakeven').innerHTML = `<caption>Jackpot cần có để vé đạt từng mức giá trị</caption><thead><tr><th>Trò chơi</th><th>${d.rules.light_pct}%, chơi nhẹ</th><th>${d.rules.play_pct}%, chơi</th><th>100%, hòa vốn kỳ vọng</th></tr></thead><tbody>` +
-      Object.keys(names).map((g) => `<tr><td>${names[g]}</td>${['45', '55', '100'].map((k) => `<td>${billions(d.breakeven[g][k])}</td>`).join('')}</tr>`).join('') + '</tbody>';
-    $('value-table').innerHTML = '<table><thead><tr><th>Kỳ</th><th>Trò chơi</th><th>Ngày</th><th>Jackpot</th><th>Giá trị vé</th></tr></thead><tbody>' +
-      Object.keys(names).flatMap((g) => d.ev_history[g].slice().reverse().map((r) => `<tr><td>${r.id}</td><td>${names[g]}</td><td>${dmy(r.date)}</td><td>${billions(r.jackpot)}</td><td>${pct(r.pct)}</td></tr>`)).join('') + '</tbody></table>';
+    const p = d.portfolio;
+    $('log').innerHTML = p.log.slice(0, 8).map((e) => `<li class="row"><div class="when"><b>${names[e.game]}, kỳ ${e.id}</b><span>${day(e.date)} ${dmy(e.date)}, giá trị vé ${pct(e.ev_pct)}</span></div>
+      <span class="verdict ${vclass[e.verdict]}">${esc(e.verdict)}</span>
+      ${e.numbers ? balls(e.numbers.slice(0, 6), e.numbers.slice(6), 'sm') : '<p class="wait">Chờ kết quả</p>'}</li>`).join('');
 
-    const t = d.tests;
-    $('test-intro').textContent = `Kết luận: không có dấu hiệu đoán được. Kết quả ${fmt(t.mega.draws)} kỳ Mega và ${fmt(t.power.draws)} kỳ Power đều phù hợp với quay ngẫu nhiên, và chọn theo số nóng hay số lạnh không trúng nhiều hơn mức kỳ vọng.`;
-    $('test-charts').innerHTML = Object.keys(names).map((g) => `<div class="chart"><h3>${names[g]}</h3><p>Độ lệch tần suất từng số. Vùng nền là khoảng dao động bình thường.</p><div class="plot" id="z-${g}"></div></div>`).join('');
-    Object.keys(names).forEach((g) => zChart($('z-' + g), g, t[g]));
-    $('test-table').innerHTML = `<thead><tr><th>Phép thử</th><th>Mega 6/45</th><th>Power 6/55</th></tr></thead><tbody>
-      <tr><td>Khả năng phân bố số là đều (p, trên 0,05 là bình thường)</td><td>${t.mega.p.toLocaleString('vi-VN')}</td><td>${t.power.p.toLocaleString('vi-VN')}</td></tr>
-      <tr><td>Số lệch ngoài vùng bình thường, thực tế / kỳ vọng</td><td>${t.mega.outside} / ${t.mega.outside_expected.toLocaleString('vi-VN')}</td><td>${t.power.outside} / ${t.power.outside_expected.toLocaleString('vi-VN')}</td></tr>
-      <tr><td>Chọn 6 số nóng ${d.rules.hot_window} kỳ, số trùng mỗi kỳ / kỳ vọng</td><td>${t.mega.hot.mean.toLocaleString('vi-VN')} / ${t.mega.hot.expected.toLocaleString('vi-VN')}</td><td>${t.power.hot.mean.toLocaleString('vi-VN')} / ${t.power.hot.expected.toLocaleString('vi-VN')}</td></tr>
-      <tr><td>Chọn 6 số lạnh ${d.rules.hot_window} kỳ, số trùng mỗi kỳ / kỳ vọng</td><td>${t.mega.cold.mean.toLocaleString('vi-VN')} / ${t.mega.cold.expected.toLocaleString('vi-VN')}</td><td>${t.power.cold.mean.toLocaleString('vi-VN')} / ${t.power.cold.expected.toLocaleString('vi-VN')}</td></tr></tbody>`;
-
-    const p = d.portfolio, f = d.filter_check;
-    $('book-intro').textContent = `Sổ theo dõi các nhận định trên trang từ ${dmy(p.start)}, không phải tiền thật. Trần ${p.week_cap} vé mỗi tuần, phần không dùng không cộng dồn.`;
-    $('book-facts').innerHTML = `<div><b>${p.week_used}/${p.week_cap} vé</b><span>đã dùng tuần này</span></div>
-      <div><b>${money(p.spent)}</b><span>đã chi từ khi bắt đầu</span></div>
-      <div><b>${money(p.returned)}</b><span>thu về, bộ số đã lọc</span></div>
-      <div><b>${money(p.returned_baseline)}</b><span>thu về, chọn ngẫu nhiên</span></div>`;
-    $('book-note').textContent = `Bộ số đã lọc không làm tăng khả năng trúng. Thử trên toàn bộ lịch sử, tỷ lệ vé trúng từ giải ba trở lên là ${pct(f.filter_win_pct, 2)}, so với ${pct(f.random_win_pct, 2)} khi chọn ngẫu nhiên và ${pct(f.theory_win_pct, 2)} theo lý thuyết. Lợi ích duy nhất là giảm rủi ro phải chia giải nếu trúng.`;
-    $('book-log').innerHTML = '<table><thead><tr><th>Kỳ</th><th>Trò chơi</th><th>Ngày</th><th>Nhận định</th><th>Giá trị vé</th><th>Vé</th><th>Dãy số trúng</th><th>Thu về</th></tr></thead><tbody>' +
-      p.log.map((e) => `<tr><td>${e.id}</td><td>${names[e.game]}</td><td>${dmy(e.date)}</td><td>${esc(e.verdict)}</td><td>${pct(e.ev_pct)}</td><td>${e.tickets.length}</td><td>${e.numbers ? e.numbers.map((n) => String(n).padStart(2, '0')).join(' ') : 'Chờ kết quả'}</td><td>${e.status === 'done' ? money(e.returned) : 'Chờ kết quả'}</td></tr>`).join('') + '</tbody></table>';
-
-    $('method').innerHTML = `<p><b>Giá trị kỳ vọng</b> là số tiền bình quân một vé thu về, tính bằng xác suất từng giải nhân với tiền thực nhận. Jackpot trừ khả năng phải chia giải, giả định người chơi chọn số đều.</p>
-      <p><b>Xác suất</b> trên một bộ số: jackpot Mega 1/${fmt(d.odds.mega.jp)}, Jackpot 1 Power 1/${fmt(d.odds.power.jp)}, Jackpot 2 Power 1/${fmt(d.odds.power.j2)}.</p>
-      <p><b>Thuế</b> tính 10% trên phần giải vượt 20 triệu đồng, theo Luật Thuế TNCN có hiệu lực từ 01/07/2026.</p>
-      <p><b>Vé bán ước tính</b> suy từ số người trúng giải ba của các kỳ gần đây. <b>Jackpot ước tính</b> bằng mức hiện tại cộng phần tích lũy bình quân trên mỗi vé.</p>
-      <p><b>Ngưỡng nhận định</b> do trang đặt ra: dưới ${d.rules.light_pct}% nghỉ, từ ${d.rules.light_pct}% chơi nhẹ ${d.rules.light_tickets} vé, từ ${d.rules.play_pct}% chơi ${d.rules.play_tickets} vé. Mức 100% trong bảng trên là gần đúng vì vé bán thường tăng khi jackpot cao.</p>
-      <p><b>Bộ số đã lọc</b> tránh dãy liên tiếp, số tập trung dưới 31 (ngày sinh), số cùng đuôi và số lặp kỳ trước. Đây là chọn ngẫu nhiên có lọc, không phải số dự đoán.</p>
-      <p><b>Nguồn:</b> kết quả từ <a href="https://github.com/vietvudanh/vietlott-data">vietlott-data</a>, Mega từ kỳ ${t.mega.first_id}. Jackpot và số người trúng từ <a href="https://xosodaiphat.com/xs-mega-xo-so-mega-645.html">Xổ số Đại Phát</a>, hai nguồn được đối chiếu dãy số mỗi lần cập nhật.</p>`;
+    const t = d.tests, f = d.filter_check;
+    $('tests').innerHTML = `<p><b>Chưa thấy dấu hiệu đoán được.</b> Kết quả ${fmt(t.mega.draws)} kỳ Mega và ${fmt(t.power.draws)} kỳ Power phù hợp với quay ngẫu nhiên.</p>
+      <div class="facts"><div><span></span><b>Mega</b><b>Power</b></div>
+      <div><span>Độ đều của các số (p, trên 0,05 là bình thường)</span><span>${num(t.mega.p)}</span><span>${num(t.power.p)}</span></div>
+      <div><span>Số trùng mỗi kỳ nếu chọn số nóng</span><span>${num(t.mega.hot.mean)}</span><span>${num(t.power.hot.mean)}</span></div>
+      <div><span>Số trùng mỗi kỳ nếu chọn số lạnh</span><span>${num(t.mega.cold.mean)}</span><span>${num(t.power.cold.mean)}</span></div>
+      <div><span>Số trùng kỳ vọng khi chọn ngẫu nhiên</span><span>${num(t.mega.hot.expected)}</span><span>${num(t.power.hot.expected)}</span></div></div>
+      <p>Bộ số gợi ý cũng không làm tăng khả năng trúng: tỷ lệ vé trúng từ giải ba trở lên là ${pct(f.filter_win_pct, 2)}, so với ${pct(f.random_win_pct, 2)} khi chọn ngẫu nhiên. Lợi ích duy nhất là giảm rủi ro phải chia giải.</p>`;
+    $('method').innerHTML = `<p><b>Giá trị vé</b> là số tiền bình quân một vé thu về: xác suất từng giải nhân tiền thực nhận, đã trừ thuế 10% phần giải vượt 20 triệu và rủi ro chia giải.</p>
+      <p><b>Nhận định:</b> dưới ${d.rules.light_pct}% nghỉ, từ ${d.rules.light_pct}% chơi nhẹ ${d.rules.light_tickets} vé, từ ${d.rules.play_pct}% chơi ${d.rules.play_tickets} vé, tối đa ${d.rules.week_tickets} vé mỗi tuần. Đây là ngưỡng do trang đặt ra. Mốc hòa vốn là gần đúng vì vé bán thường tăng khi jackpot cao.</p>
+      <p><b>Ước tính:</b> số vé bán suy từ số người trúng giải ba các kỳ gần đây, jackpot kỳ tới bằng mức hiện tại cộng phần tích lũy bình quân.</p>
+      <p><b>Nguồn:</b> dãy số từ <a href="https://github.com/vietvudanh/vietlott-data">vietlott-data</a>, jackpot và số người trúng từ <a href="https://xosodaiphat.com/xs-mega-xo-so-mega-645.html">Xổ số Đại Phát</a>. Hai nguồn được đối chiếu dãy số mỗi lần cập nhật. Mega có dữ liệu từ kỳ ${t.mega.first_id}, jackpot lưu từ tháng 10/2026.</p>`;
   }
 
-  fetch('data/dashboard.json?v=' + Date.now())
-    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(render)
-    .then(() => fetch('data/history.json?v=' + Date.now()))
-    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(draws)
+  document.querySelectorAll('.switch button').forEach((btn) => btn.addEventListener('click', () => {
+    state.game = btn.dataset.game;
+    state.shown = 10;
+    document.querySelectorAll('.switch button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    drawGame();
+  }));
+  $('more').addEventListener('click', () => { state.shown += 20; drawGame(); });
+  addEventListener('resize', () => { if (state.hist) drawChart(); });
+
+  const load = (path) => fetch(`data/${path}?v=${Date.now()}`).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+  Promise.all([load('dashboard.json'), load('history.json')])
+    .then(([d, h]) => { render(d); state.hist = h; drawGame(); })
     .catch(() => {
       $('headline').textContent = 'Chưa tải được số liệu';
-      $('commentary').innerHTML = '<p>Tải lại trang sau ít phút. Nếu vẫn lỗi, tệp số liệu đang được cập nhật.</p>';
-      $('stamp').textContent = '';
+      $('commentary').innerHTML = '<p>Tải lại trang sau ít phút.</p>';
     });
 })();
