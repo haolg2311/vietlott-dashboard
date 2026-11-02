@@ -120,7 +120,7 @@ main h2 { font-size: clamp(25px, 3.6vw, 33px); line-height: 1.2; letter-spacing:
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
 th, td { text-align: right; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
 th { color: var(--ink-2); font-weight: 600; }
-th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 96px; }
+th:first-child, td:first-child { text-align: left; white-space: normal; }
 caption { text-align: left; font-weight: 600; padding-bottom: 8px; }
 details { margin-top: 18px; }
 summary { cursor: pointer; font-weight: 600; font-size: 15px; }
@@ -128,6 +128,15 @@ summary { cursor: pointer; font-weight: 600; font-size: 15px; }
 .facts div { border-top: 2px solid var(--ink); padding-top: 8px; }
 .facts b { display: block; font-size: 25px; line-height: 1.2; letter-spacing: -.01em; }
 .facts span { font-size: 14px; color: var(--ink-2); }
+.switch { display: inline-flex; gap: 2px; padding: 2px; background: var(--band-fill); border-radius: 6px; margin-bottom: 4px; }
+.switch button { font: inherit; font-size: 15px; font-weight: 600; color: var(--ink-2); background: none; border: 0; border-radius: 5px; padding: 6px 14px; cursor: pointer; min-height: 40px; }
+.switch button[aria-pressed="true"] { background: var(--surface); color: var(--ink); }
+.more { font: inherit; font-size: 15px; font-weight: 600; color: var(--ink); background: none; border: 1px solid var(--line); border-radius: 5px; padding: 8px 16px; margin-top: 16px; cursor: pointer; min-height: 40px; }
+.more[hidden] { display: none; }
+.cell-balls { text-align: left; }
+.cell-balls .balls { margin: 0; flex-wrap: nowrap; gap: 4px; }
+.cell-balls .balls li { width: 30px; height: 30px; font-size: 13px; }
+#draws-table th:nth-child(3) { text-align: left; }
 .note { font-size: 14px; color: var(--ink-2); max-width: 74ch; }
 .method { columns: 2; column-gap: 36px; font-size: 15px; color: var(--ink-2); }
 .method p { margin: 0 0 12px; break-inside: avoid; }

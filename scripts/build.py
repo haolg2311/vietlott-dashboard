@@ -29,8 +29,6 @@ TAX_RATE = 0.10
 PLAY_PCT, LIGHT_PCT = 55, 45
 PLAY_TICKETS, LIGHT_TICKETS = 5, 2
 HOT_WINDOW = 30
-BACKTEST_WEEKS = 52
-BACKTEST_SIMS = 300
 FULL_SIMS = 40
 FORWARD_START = "2026-11-02"
 WEEKDAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"]
@@ -255,41 +253,8 @@ def randomness(game, draws):
     }
 
 
-def weeks_back(all_draws, end):
-    start = end - timedelta(days=end.weekday()) - timedelta(weeks=BACKTEST_WEEKS)
-    weeks = []
-    for w in range(BACKTEST_WEEKS):
-        a = start + timedelta(weeks=w)
-        b = a + timedelta(days=7)
-        plan = []
-        for game, draws in all_draws.items():
-            inside = [(i, d) for i, d in enumerate(draws) if a <= date.fromisoformat(d["date"]) < b]
-            if inside:
-                for t in range(5):
-                    plan.append((game, inside[t % len(inside)][0]))
-        weeks.append((a, plan))
-    return weeks
-
-
-def backtest(all_draws, end):
-    weeks = weeks_back(all_draws, end)
-    spent = sum(len(plan) for _, plan in weeks) * TICKET
-    weekly = {"filter": [0.0] * len(weeks), "random": [0.0] * len(weeks)}
-    for sim in range(BACKTEST_SIMS):
-        for w, (_, plan) in enumerate(weeks):
-            for t, (game, i) in enumerate(plan):
-                draws = all_draws[game]
-                pool = GAMES[game]["pool"]
-                rng = seeded("sim", sim, w, t)
-                weekly["filter"][w] += fixed_prize(game, pick_filtered(rng, pool, draws[i - 1]["main"]), draws[i])[0]
-                weekly["random"][w] += fixed_prize(game, pick_random(rng, pool), draws[i])[0]
-    path, cum, paid = [], {"filter": 0.0, "random": 0.0}, 0
-    for w, (a, plan) in enumerate(weeks):
-        paid += len(plan) * TICKET
-        for k in cum:
-            cum[k] += weekly[k][w] / BACKTEST_SIMS
-        path.append({"week": a.isoformat(), "spent": paid, "filter": round(cum["filter"]), "random": round(cum["random"])})
-
+def filter_check(all_draws):
+    """So tỷ lệ vé trúng từ giải ba trở lên giữa bộ số đã lọc, chọn ngẫu nhiên và lý thuyết."""
     wins = {"filter": 0, "random": 0}
     tickets = 0
     for game, draws in all_draws.items():
@@ -302,18 +267,31 @@ def backtest(all_draws, end):
                 wins["random"] += len(main & set(pick_random(rng, pool))) >= 3
                 tickets += 1
     weights = {g: (len(d) - 1) * FULL_SIMS for g, d in all_draws.items()}
-    theory = sum(w * sum(v for k, v in odds(g).items()) for g, w in weights.items()) / tickets
+    theory = sum(w * sum(odds(g).values()) for g, w in weights.items()) / tickets
     return {
-        "path": path, "weeks": BACKTEST_WEEKS, "spent": spent, "sims": BACKTEST_SIMS,
-        "filter_avg": path[-1]["filter"], "random_avg": path[-1]["random"],
-        "filter_pct": round(path[-1]["filter"] / spent * 100, 1),
-        "random_pct": round(path[-1]["random"] / spent * 100, 1),
-        "full_tickets": tickets,
-        "full_filter_win_pct": round(wins["filter"] / tickets * 100, 2),
-        "full_random_win_pct": round(wins["random"] / tickets * 100, 2),
-        "full_theory_win_pct": round(theory * 100, 2),
-        "fixed_expected_pct": round((fixed_ev("mega") + fixed_ev("power")) / 2 / TICKET * 100, 1),
+        "tickets": tickets,
+        "filter_win_pct": round(wins["filter"] / tickets * 100, 2),
+        "random_win_pct": round(wins["random"] / tickets * 100, 2),
+        "theory_win_pct": round(theory * 100, 2),
     }
+
+
+def write_history(all_draws, valid_rows):
+    """Lưu toàn bộ dãy số đã quay, mới nhất trước, kèm jackpot của các kỳ có số liệu."""
+    out = {}
+    for game, draws in all_draws.items():
+        rows = {r["id"]: r for r in valid_rows[game]}
+        items = []
+        for d in reversed(draws):
+            item = {"id": d["id"], "date": d["date"], "main": d["main"], "extra": d["extra"]}
+            r = rows.get(d["id"])
+            if r:
+                item.update(jackpot=r["jackpot"], winners=r["jackpot_winners"])
+                if game == "power":
+                    item.update(jackpot2=r["jackpot2"], winners2=r["jackpot2_winners"])
+            items.append(item)
+        out[game] = items
+    (DATA / "history.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")) + "\n")
 
 
 def week_start(d):
@@ -373,7 +351,7 @@ def main():
     today = now.date()
     jackpots = json.loads((DATA / "jackpots.json").read_text())
     all_draws = {g: load_draws(g) for g in GAMES}
-    warnings, next_rows, ev_history, be, tests, latest = [], [], {}, {}, {}, {}
+    warnings, next_rows, ev_history, be, tests, latest, valid_rows = [], [], {}, {}, {}, {}, {}
 
     for game, info in GAMES.items():
         draws = all_draws[game]
@@ -387,6 +365,7 @@ def main():
                 warnings.append(f"{info['name']} kỳ {r['id']}: hai nguồn lệch nhau, đã bỏ kỳ này.")
             else:
                 rows.append(r)
+        valid_rows[game] = rows
         last = draws[-1]
         if not rows or rows[-1]["id"] != last["id"]:
             warnings.append(f"{info['name']}: thiếu jackpot kỳ {last['id']}, số ước tính có thể cũ.")
@@ -423,7 +402,7 @@ def main():
         tests[game] = randomness(game, draws)
 
     portfolio = update_portfolio(next_rows, all_draws, today)
-    end = max(date.fromisoformat(d[-1]["date"]) for d in all_draws.values())
+    write_history(all_draws, valid_rows)
     commentary_file = DATA / "commentary.json"
     commentary = json.loads(commentary_file.read_text()) if commentary_file.exists() else {}
     if commentary.get("date") != today.isoformat():
@@ -438,7 +417,7 @@ def main():
         "generated_at": now.isoformat(timespec="minutes"), "today": today.isoformat(),
         "weekday": WEEKDAYS[today.weekday()], "commentary": commentary, "warnings": warnings,
         "next": sorted(next_rows, key=lambda r: r["date"]), "latest": latest, "ev_history": ev_history,
-        "breakeven": be, "tests": tests, "portfolio": portfolio, "backtest": backtest(all_draws, end),
+        "breakeven": be, "tests": tests, "portfolio": portfolio, "filter_check": filter_check(all_draws),
         "rules": {"ticket": TICKET, "play_pct": PLAY_PCT, "light_pct": LIGHT_PCT, "play_tickets": PLAY_TICKETS,
                   "light_tickets": LIGHT_TICKETS, "week_tickets": WEEK_TICKETS, "hot_window": HOT_WINDOW},
         "odds": {g: {k: round(1 / v) for k, v in odds(g).items()} for g in GAMES},

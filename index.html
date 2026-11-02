@@ -37,6 +37,17 @@
     <details><summary>Xem bảng số liệu từng kỳ</summary><div class="table-scroll" id="value-table"></div></details>
   </section>
 
+  <section aria-labelledby="draws-title">
+    <h2 id="draws-title">Kết quả các kỳ đã quay</h2>
+    <p class="intro" id="draws-intro"></p>
+    <div class="switch" role="group" aria-label="Chọn trò chơi">
+      <button type="button" data-game="mega" aria-pressed="true">Mega 6/45</button>
+      <button type="button" data-game="power" aria-pressed="false">Power 6/55</button>
+    </div>
+    <div class="table-scroll"><table id="draws-table"></table></div>
+    <button type="button" class="more" id="draws-more">Xem thêm 30 kỳ</button>
+  </section>
+
   <section aria-labelledby="test-title">
     <h2 id="test-title">Có đoán được số không</h2>
     <p class="intro" id="test-intro"></p>
@@ -48,7 +59,6 @@
     <h2 id="book-title">Danh mục giả lập 100.000đ/tuần</h2>
     <p class="intro" id="book-intro"></p>
     <div class="facts" id="book-facts"></div>
-    <div id="book-chart" class="plot"></div>
     <p class="note" id="book-note"></p>
     <details><summary>Nhật ký nhận định</summary><div class="table-scroll" id="book-log"></div></details>
   </section>

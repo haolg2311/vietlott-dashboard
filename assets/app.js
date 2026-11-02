@@ -106,32 +106,26 @@
     new ResizeObserver(render).observe(el);
   }
 
-  function bookChart(el, b) {
-    const render = () => {
-      const rows = b.path, w = el.clientWidth, h = 260, m = { t: 14, r: 12, b: 26, l: 62 };
-      const iw = w - m.l - m.r, ih = h - m.t - m.b, top = b.spent;
-      const x = (i) => m.l + i * iw / (rows.length - 1);
-      const y = (v) => m.t + ih - v / top * ih;
-      const path = (k) => rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(r[k]).toFixed(1)}`).join(' ');
-      const grid = [0, top / 2, top].map((v) => `<line x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${v ? (v / 1e6).toLocaleString('vi-VN') + ' triệu' : '0'}</text>`).join('');
-      const end = rows[rows.length - 1];
-      const hits = rows.map((r, i) => `<rect data-i="${i}" x="${x(i) - iw / rows.length / 2}" y="${m.t}" width="${iw / rows.length}" height="${ih}" fill="transparent"/>`).join('');
-      el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" height="${h}" role="img" aria-label="Tiền bỏ ra và tiền thu về trong backtest">${grid}
-        <path d="${path('spent')}" fill="none" stroke="var(--spent)" stroke-width="2"/>
-        <path d="${path('random')}" fill="none" stroke="var(--power)" stroke-width="2"/>
-        <path d="${path('filter')}" fill="none" stroke="var(--mega)" stroke-width="2"/>
-        <text x="${m.l}" y="${h - 6}">${dm(rows[0].week)}</text><text x="${w - m.r}" y="${h - 6}" text-anchor="end">${dm(end.week)}</text>${hits}</svg>
-        <ul class="key" style="margin-top:8px"><li><b style="background:var(--spent)"></b>Tiền bỏ ra</li><li><b style="background:var(--mega)"></b>Thu về, bộ số đã lọc</li><li><b style="background:var(--power)"></b>Thu về, chọn ngẫu nhiên</li></ul>`;
-      el.querySelectorAll('rect[data-i]').forEach((node) => {
-        const r = rows[+node.dataset.i];
-        const on = (e) => showTip(e, `Tuần từ ${dmy(r.week)}<br>Bỏ ra ${money(r.spent)}<br>Thu về đã lọc ${money(r.filter)}<br>Thu về ngẫu nhiên ${money(r.random)}`);
-        node.addEventListener('pointermove', on);
-        node.addEventListener('pointerdown', on);
-        node.addEventListener('pointerleave', hideTip);
-      });
+  function draws(hist) {
+    const names = { mega: 'Mega 6/45', power: 'Power 6/55' };
+    const state = { game: 'mega', shown: 30 };
+    const draw = () => {
+      const rows = hist[state.game], show = rows.slice(0, state.shown), power = state.game === 'power';
+      $('draws-table').innerHTML = `<caption>${names[state.game]}, ${fmt(show.length)}/${fmt(rows.length)} kỳ gần nhất</caption><thead><tr><th>Kỳ</th><th>Ngày</th><th>Dãy số trúng</th><th>${power ? 'Jackpot 1' : 'Jackpot'}</th><th>Người trúng</th>${power ? '<th>Jackpot 2</th><th>Người trúng</th>' : ''}</tr></thead><tbody>` +
+        show.map((r) => `<tr style="--c:${color(state.game)}"><td>${r.id}</td><td>${dmy(r.date)}</td><td class="cell-balls">${balls(r.main, r.extra)}</td>
+          <td>${r.jackpot ? billions(r.jackpot) : 'Chưa có'}</td><td>${r.jackpot ? r.winners : 'Chưa có'}</td>
+          ${power ? `<td>${r.jackpot2 ? billions(r.jackpot2) : 'Chưa có'}</td><td>${r.jackpot2 ? r.winners2 : 'Chưa có'}</td>` : ''}</tr>`).join('') + '</tbody>';
+      $('draws-more').hidden = show.length >= rows.length;
     };
-    render();
-    new ResizeObserver(render).observe(el);
+    document.querySelectorAll('.switch button').forEach((btn) => btn.addEventListener('click', () => {
+      state.game = btn.dataset.game;
+      state.shown = 30;
+      document.querySelectorAll('.switch button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      draw();
+    }));
+    $('draws-more').addEventListener('click', () => { state.shown += 30; draw(); });
+    $('draws-intro').textContent = `Lưu đủ ${fmt(hist.mega.length)} kỳ Mega từ kỳ ${hist.mega[hist.mega.length - 1].id} và ${fmt(hist.power.length)} kỳ Power từ kỳ ${hist.power[hist.power.length - 1].id}, cập nhật mỗi ngày. Với Power, số tô đậm cuối dãy là số đặc biệt. Jackpot được lưu từ tháng 10/2026.`;
+    draw();
   }
 
   function render(d) {
@@ -162,16 +156,15 @@
       <tr><td>Chọn 6 số nóng ${d.rules.hot_window} kỳ, số trùng mỗi kỳ / kỳ vọng</td><td>${t.mega.hot.mean.toLocaleString('vi-VN')} / ${t.mega.hot.expected.toLocaleString('vi-VN')}</td><td>${t.power.hot.mean.toLocaleString('vi-VN')} / ${t.power.hot.expected.toLocaleString('vi-VN')}</td></tr>
       <tr><td>Chọn 6 số lạnh ${d.rules.hot_window} kỳ, số trùng mỗi kỳ / kỳ vọng</td><td>${t.mega.cold.mean.toLocaleString('vi-VN')} / ${t.mega.cold.expected.toLocaleString('vi-VN')}</td><td>${t.power.cold.mean.toLocaleString('vi-VN')} / ${t.power.cold.expected.toLocaleString('vi-VN')}</td></tr></tbody>`;
 
-    const p = d.portfolio, b = d.backtest;
+    const p = d.portfolio, f = d.filter_check;
     $('book-intro').textContent = `Sổ theo dõi các nhận định trên trang từ ${dmy(p.start)}, không phải tiền thật. Trần ${p.week_cap} vé mỗi tuần, phần không dùng không cộng dồn.`;
     $('book-facts').innerHTML = `<div><b>${p.week_used}/${p.week_cap} vé</b><span>đã dùng tuần này</span></div>
       <div><b>${money(p.spent)}</b><span>đã chi từ khi bắt đầu</span></div>
       <div><b>${money(p.returned)}</b><span>thu về, bộ số đã lọc</span></div>
       <div><b>${money(p.returned_baseline)}</b><span>thu về, chọn ngẫu nhiên</span></div>`;
-    bookChart($('book-chart'), b);
-    $('book-note').textContent = `Biểu đồ mô phỏng ${b.weeks} tuần gần nhất, mỗi tuần 10 vé, bình quân ${b.sims} lần chạy, chỉ tính giải cố định. Thu về khoảng ${pct(b.filter_pct)} với bộ số đã lọc và ${pct(b.random_pct)} với chọn ngẫu nhiên. Chênh lệch này chủ yếu do vài vé trúng giải nhất: trên toàn bộ lịch sử, tỷ lệ vé trúng từ giải ba trở lên là ${pct(b.full_filter_win_pct, 2)} so với ${pct(b.full_random_win_pct, 2)}, kỳ vọng ${pct(b.full_theory_win_pct, 2)}. Bộ lọc không làm tăng khả năng trúng, chỉ giảm rủi ro phải chia giải nếu trúng.`;
-    $('book-log').innerHTML = '<table><thead><tr><th>Kỳ</th><th>Trò chơi</th><th>Ngày</th><th>Nhận định</th><th>Giá trị vé</th><th>Vé</th><th>Thu về</th></tr></thead><tbody>' +
-      p.log.map((e) => `<tr><td>${e.id}</td><td>${names[e.game]}</td><td>${dmy(e.date)}</td><td>${esc(e.verdict)}</td><td>${pct(e.ev_pct)}</td><td>${e.tickets.length}</td><td>${e.status === 'done' ? money(e.returned) : 'Chờ kết quả'}</td></tr>`).join('') + '</tbody></table>';
+    $('book-note').textContent = `Bộ số đã lọc không làm tăng khả năng trúng. Thử trên toàn bộ lịch sử, tỷ lệ vé trúng từ giải ba trở lên là ${pct(f.filter_win_pct, 2)}, so với ${pct(f.random_win_pct, 2)} khi chọn ngẫu nhiên và ${pct(f.theory_win_pct, 2)} theo lý thuyết. Lợi ích duy nhất là giảm rủi ro phải chia giải nếu trúng.`;
+    $('book-log').innerHTML = '<table><thead><tr><th>Kỳ</th><th>Trò chơi</th><th>Ngày</th><th>Nhận định</th><th>Giá trị vé</th><th>Vé</th><th>Dãy số trúng</th><th>Thu về</th></tr></thead><tbody>' +
+      p.log.map((e) => `<tr><td>${e.id}</td><td>${names[e.game]}</td><td>${dmy(e.date)}</td><td>${esc(e.verdict)}</td><td>${pct(e.ev_pct)}</td><td>${e.tickets.length}</td><td>${e.numbers ? e.numbers.map((n) => String(n).padStart(2, '0')).join(' ') : 'Chờ kết quả'}</td><td>${e.status === 'done' ? money(e.returned) : 'Chờ kết quả'}</td></tr>`).join('') + '</tbody></table>';
 
     $('method').innerHTML = `<p><b>Giá trị kỳ vọng</b> là số tiền bình quân một vé thu về, tính bằng xác suất từng giải nhân với tiền thực nhận. Jackpot trừ khả năng phải chia giải, giả định người chơi chọn số đều.</p>
       <p><b>Xác suất</b> trên một bộ số: jackpot Mega 1/${fmt(d.odds.mega.jp)}, Jackpot 1 Power 1/${fmt(d.odds.power.jp)}, Jackpot 2 Power 1/${fmt(d.odds.power.j2)}.</p>
@@ -185,6 +178,9 @@
   fetch('data/dashboard.json?v=' + Date.now())
     .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(render)
+    .then(() => fetch('data/history.json?v=' + Date.now()))
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(draws)
     .catch(() => {
       $('headline').textContent = 'Chưa tải được số liệu';
       $('commentary').innerHTML = '<p>Tải lại trang sau ít phút. Nếu vẫn lỗi, tệp số liệu đang được cập nhật.</p>';
