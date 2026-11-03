@@ -579,7 +579,8 @@ def update_forecast_log(all_rows, all_draws, valid_rows, lotto, now):
     for e in log:
         if e["actual"] is None:
             e["actual"] = actual_result(e, all_draws, valid_rows, lotto)
-    log = [e for e in log if not (e["run"] == run and e["actual"] is None)]
+    upcoming = {(r["game"], r["id"]) for r in all_rows}
+    log = [e for e in log if not (e["run"] == run and e["actual"] is None and (e["game"], e["id"]) in upcoming)]
     done = {(e["game"], e["id"]) for e in log if e["actual"] is not None}
     for r in all_rows:
         if (r["game"], r["id"]) in done:

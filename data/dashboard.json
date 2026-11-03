@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-03T20:33+07:00",
+ "generated_at": "2026-11-03T21:01+07:00",
  "today": "2026-11-03",
  "weekday": "Thứ 3",
  "commentary": {
@@ -1115,7 +1115,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 3,
+  "forecasts": 4,
   "start": "2026-11-03",
   "games": {
    "mega": {
