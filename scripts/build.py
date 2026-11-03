@@ -158,9 +158,10 @@ def est_tickets(game, row):
 
 def recent_tickets(game, rows):
     """Doanh số vé rơi mạnh ngay sau khi nổ jackpot, nên dùng mức thấp của giai đoạn gần đây."""
+    full = [r for r in rows if r.get("g3")]
     if rows[-1]["jackpot_winners"] > 0:
-        return min(est_tickets(game, r) for r in rows[-13:])
-    return mean(est_tickets(game, r) for r in rows[-3:])
+        return min(est_tickets(game, r) for r in full[-13:])
+    return mean(est_tickets(game, r) for r in full[-3:])
 
 
 def est_next(game, rows):
@@ -171,11 +172,12 @@ def est_next(game, rows):
     """
     keys = ["jackpot"] + (["jackpot2"] if game == "power" else [])
     out = {"jackpot2": 0}
-    last = rows[-1]
     for key in keys:
         win_key = key + "_winners"
+        rows_key = [r for r in rows if r.get(key) is not None]
+        last = rows_key[-1]
         cycle, firsts = [], []
-        for a, b in zip(rows, rows[1:]):
+        for a, b in zip(rows_key, rows_key[1:]):
             if a[win_key] > 0:
                 cycle = []
             elif b[key] > a[key]:
@@ -319,7 +321,7 @@ def write_history(all_draws, valid_rows, lotto):
             if r:
                 item.update(jackpot=r["jackpot"], winners=r["jackpot_winners"])
                 if game == "power":
-                    item.update(jackpot2=r["jackpot2"], winners2=r["jackpot2_winners"])
+                    item.update(jackpot2=r.get("jackpot2"), winners2=r.get("jackpot2_winners", 0))
             items.append(item)
         out[game] = items
     rows = {r["id"]: r for r in lotto["rows"]}
@@ -401,6 +403,7 @@ def lotto_block(draws, store, warnings, today):
     by_id = {d["id"]: d for d in draws}
     rows = []
     for r in sorted(store["rows"], key=lambda x: x["id"]):
+        r = {"values": dict((k, v) for k, v in LOTTO_BASE.items() if k != "kk"), **r}
         d = by_id.get(r["id"])
         if d is not None and (d["main"] + d["extra"] != r["numbers"] or d["date"] != r["date"]):
             warnings.append(f"Lotto 5/35 kỳ {r['id']}: hai nguồn lệch nhau, đã bỏ kỳ này.")
@@ -408,7 +411,7 @@ def lotto_block(draws, store, warnings, today):
         rows.append(r)
     known = {x["id"] for x in store["rolldowns"]}
     for r in rows:
-        if r["jackpot_winners"] == 0 and r["values"]["g2"] > LOTTO_BASE["g2"] and r["id"] not in known:
+        if r["jackpot_winners"] == 0 and r["values"]["g2"] > LOTTO_BASE["g2"] and r["id"] not in known and r.get("winners"):
             store["rolldowns"].append({"id": r["id"], "date": r["date"], "jackpot": r["jackpot"],
                                        "tickets": round(r["winners"]["kk"] / LOTTO_ODDS["kk"], -4),
                                        "basis": "Suy từ số giải Khuyến khích"})
@@ -417,14 +420,14 @@ def lotto_block(draws, store, warnings, today):
     last = rows[-1]
     last_raw = draws[-1]
     if last["id"] < last_raw["id"]:
-        warnings.append(f"Lotto 5/35: thiếu Độc đắc kỳ {last_raw['id']}, số ước tính có thể cũ.")
+        warnings.append(f"Lotto 5/35: chưa có số liệu kỳ {last_raw['id']}, sẽ cập nhật ở lượt sau.")
     if last["id"] > last_raw["id"]:
         draws = draws + [{"id": last["id"], "date": last["date"], "main": last["numbers"][:5], "extra": last["numbers"][5:]}]
     latest = draws[-1]
     day, slot = date.fromisoformat(latest["date"]), draw_slot(latest["id"])
-    rises = [b["jackpot"] - a["jackpot"] for a, b in zip(rows, rows[1:]) if b["jackpot"] > a["jackpot"]][-5:]
+    rises = [b["jackpot"] - a["jackpot"] for a, b in zip(rows, rows[1:]) if b["jackpot"] > a["jackpot"]][-3:]
     step = mean(rises) if rises else 240e6
-    tickets = mean(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in rows[-3:])
+    tickets = mean(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in [x for x in rows if x.get("winners")][-3:])
     jackpot = last["jackpot"] if last["jackpot_winners"] == 0 and last["values"]["g2"] == LOTTO_BASE["g2"] else LOTTO["seed_jp"]
     armed_date = None
     if jackpot > LOTTO["trigger"]:
@@ -568,7 +571,7 @@ def main():
         valid_rows[game] = rows
         last = draws[-1]
         if not rows or rows[-1]["id"] != last["id"]:
-            warnings.append(f"{info['name']}: thiếu jackpot kỳ {last['id']}, số ước tính có thể cũ.")
+            warnings.append(f"{info['name']}: chưa có jackpot kỳ {last['id']}, sẽ cập nhật ở lượt sau.")
         last_date = date.fromisoformat(last["date"])
         if (today - last_date).days > 3:
             warnings.append(f"{info['name']}: dữ liệu kết quả dừng ở {last['date']}.")
@@ -595,8 +598,8 @@ def main():
         }
         ev_history[game] = [
             {"id": r["id"], "date": r["date"], "jackpot": r["jackpot"], "winners": r["jackpot_winners"],
-             "pct": ticket_ev(game, r["jackpot"], r.get("jackpot2", 0), est_tickets(game, r))["pct"]}
-            for r in rows[-EV_HISTORY:]
+             "pct": ticket_ev(game, r["jackpot"], r.get("jackpot2") or 0, est_tickets(game, r))["pct"]}
+            for r in [x for x in rows if x.get("g3")][-EV_HISTORY:]
         ]
         be[game] = breakeven(game, tickets, est["jackpot2"])
         tests[game] = randomness(game, draws)

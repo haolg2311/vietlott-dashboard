@@ -98,7 +98,7 @@
       const won = [];
       if (r.winners) won.push(`${power ? 'JP1 ' : ''}${r.winners} người trúng`);
       if (r.winners2) won.push(`JP2 ${r.winners2} người trúng`);
-      const value = !r.jackpot ? '' : state.game === 'lotto' ? `Độc đắc ${billions(r.jackpot)}` : power ? `JP1 ${billions(r.jackpot)}, JP2 ${billions(r.jackpot2)}` : `Jackpot ${billions(r.jackpot)}`;
+      const value = !r.jackpot ? '' : state.game === 'lotto' ? `Độc đắc ${billions(r.jackpot)}` : power ? `JP1 ${billions(r.jackpot)}${r.jackpot2 ? `, JP2 ${billions(r.jackpot2)}` : ''}` : `Jackpot ${billions(r.jackpot)}`;
       if (r.rolldown) won.push('Kỳ chia giải');
       return `<li class="row"><div class="when"><b>Kỳ ${r.id}</b> <span>${day(r.date)} ${dmy(r.date)}</span></div>${balls(r.main, r.extra, 'sm')}<div class="prize">${value}${won.length ? `<span class="won">${won.join(', ')}</span>` : ''}</div></li>`;
     }).join('');

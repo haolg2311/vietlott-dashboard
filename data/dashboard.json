@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-03T16:28+07:00",
+ "generated_at": "2026-11-03T16:32+07:00",
  "today": "2026-11-03",
  "weekday": "Thứ 3",
  "commentary": {
@@ -18,15 +18,15 @@
    "date": "2026-11-03",
    "slot": "21h",
    "weekday": "Thứ 3",
-   "jackpot": 11339000000,
+   "jackpot": 11536000000,
    "jackpot2": 0,
    "tickets_est": 271000.0,
    "ev": {
     "fixed": 1734,
-    "jackpot": 2531,
+    "jackpot": 2575,
     "jackpot2": 0,
-    "total": 4265,
-    "pct": 42.7
+    "total": 4310,
+    "pct": 43.1
    },
    "verdict": "Nghỉ",
    "tickets": 0,
@@ -51,13 +51,13 @@
    "status": "near",
    "current_jackpot": 10806423500,
    "trigger": 12000000000.0,
-   "draws_to": 3,
+   "draws_to": 2,
    "target": {
     "id": 990,
     "date": "2026-11-05",
     "weekday": "Thứ 5",
-    "jackpot": 13470000000,
-    "tickets": 1490000.0,
+    "jackpot": 14460000000,
+    "tickets": 1600000.0,
     "ev": {
      "share": 8619,
      "fixed": 1734,
