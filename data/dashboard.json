@@ -1,65 +1,63 @@
 {
- "generated_at": "2026-11-03T09:50+07:00",
+ "generated_at": "2026-11-03T16:27+07:00",
  "today": "2026-11-03",
  "weekday": "Thứ 3",
  "commentary": {
   "date": "2026-11-03",
-  "headline": "Các kỳ tới nên nghỉ.",
+  "headline": "Lotto 5/35 sắp tới mốc chia giải.",
   "paragraphs": [
-   "Mega đạt 40,2%, Lotto đạt 37,6% và Power đạt 33,4% giá vé 10.000đ, đều dưới mốc 45% nên chưa đáng mua. Lotto 5/35 còn khoảng 15 kỳ nữa mới tới mốc chia giải 12 tỷ nếu chưa có người trúng Độc đắc."
+   "Độc đắc đạt 10,8 tỷ, tăng nhanh hơn thường lệ. Nếu chưa có người trúng, kỳ chia giải sớm nhất dự kiến là kỳ 990, 21h ngày 05/11, vé dừng bán 20h30, giá trị vé khoảng 10.354đ và phụ thuộc số vé bán."
   ]
  },
- "warnings": [
-  "Lotto 5/35: thiếu Độc đắc kỳ 984, số ước tính có thể cũ."
- ],
+ "warnings": [],
  "next": [
   {
    "game": "lotto",
    "name": "Lotto 5/35",
-   "id": 985,
+   "id": 986,
    "date": "2026-11-03",
-   "slot": "13h",
+   "slot": "21h",
    "weekday": "Thứ 3",
-   "jackpot": 8989000000,
+   "jackpot": 11339000000,
    "jackpot2": 0,
-   "tickets_est": 217000.0,
+   "tickets_est": 271000.0,
    "ev": {
     "fixed": 1734,
-    "jackpot": 2021,
+    "jackpot": 2531,
     "jackpot2": 0,
-    "total": 3755,
-    "pct": 37.6
+    "total": 4265,
+    "pct": 42.7
    },
    "verdict": "Nghỉ",
    "tickets": 0,
    "sets": [
     [
-     15,
-     20,
-     21,
-     26,
-     34,
-     10
+     4,
+     9,
+     17,
+     28,
+     32,
+     5
     ],
     [
-     3,
-     6,
-     20,
-     25,
-     33,
-     1
+     13,
+     23,
+     24,
+     27,
+     35,
+     5
     ]
    ],
-   "status": "normal",
-   "current_jackpot": 8763075000,
+   "status": "near",
+   "current_jackpot": 10806423500,
    "trigger": 12000000000.0,
-   "draws_to": 15,
+   "draws_to": 3,
    "target": {
-    "id": 1002,
-    "date": "2026-11-11",
-    "weekday": "Thứ 4",
-    "jackpot": 12830000000,
-    "tickets": 1420000.0,
+    "id": 990,
+    "date": "2026-11-05",
+    "weekday": "Thứ 5",
+    "jackpot": 13470000000,
+    "tickets": 1490000.0,
     "ev": {
      "share": 8619,
      "fixed": 1734,
@@ -103,7 +101,8 @@
      47,
      53
     ]
-   ]
+   ],
+   "hold": true
   },
   {
    "game": "mega",
@@ -140,7 +139,8 @@
      44,
      45
     ]
-   ]
+   ],
+   "hold": true
   }
  ],
  "latest": {
@@ -179,20 +179,20 @@
    "jackpot_winners": 0
   },
   "lotto": {
-   "id": 984,
-   "date": "2026-11-02",
-   "weekday": "Thứ 2",
+   "id": 985,
+   "date": "2026-11-03",
+   "weekday": "Thứ 3",
    "main": [
     4,
-    19,
-    25,
-    33,
-    35
+    11,
+    21,
+    22,
+    33
    ],
    "extra": [
-    5
+    4
    ],
-   "jackpot": 8763075000,
+   "jackpot": 10806423500,
    "jackpot_winners": 0
   }
  },
