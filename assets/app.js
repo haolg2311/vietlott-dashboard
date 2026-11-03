@@ -143,6 +143,19 @@
       <span class="verdict ${vclass[e.verdict]}">${esc(e.verdict)}</span>
       ${e.numbers ? balls(e.numbers.slice(0, e.game === 'lotto' ? 5 : 6), e.numbers.slice(e.game === 'lotto' ? 5 : 6), 'sm') : '<p class="wait">Chờ kết quả</p>'}</li>`).join('');
 
+    const ac = d.accuracy, cols = ['mega', 'power', 'lotto'];
+    const acRow = (label, get) => `<div><span>${label}</span>${cols.map((g) => `<span>${get(ac.games[g])}</span>`).join('')}</div>`;
+    const off = (v) => (v === null ? 'Chưa có' : pct(v));
+    const scored = cols.reduce((n, g) => n + ac.games[g].scored, 0);
+    $('acc-note').textContent = scored
+      ? `Sổ dự báo bắt đầu từ ${dmy(ac.start)}. Mỗi kỳ lấy dự báo gần giờ quay nhất so với kết quả thật.`
+      : `Sổ dự báo bắt đầu từ ${dmy(ac.start)}. Chưa có kỳ nào đủ kết quả để chấm.`;
+    $('acc').innerHTML = `<div><span></span><b>Mega</b><b>Power</b><b>Lotto</b></div>
+      ${acRow('Số kỳ đã chấm', (x) => x.scored)}
+      ${acRow('Sai số jackpot', (x) => off(x.jackpot_error))}
+      ${acRow('Sai số vé bán', (x) => off(x.tickets_error))}
+      ${acRow('Số trùng bộ số, thực tế', (x) => (x.set_hits === null ? 'Chưa có' : num(x.set_hits)))}
+      ${acRow('Số trùng kỳ vọng', (x) => num(x.set_hits_expected))}`;
     const t = d.tests, f = d.filter_check;
     const row = (label, get) => `<div><span>${label}</span>${['mega', 'power', 'lotto'].map((g) => `<span>${num(get(t[g]))}</span>`).join('')}</div>`;
     $('tests').innerHTML = `<p><b>Chưa thấy dấu hiệu đoán được.</b> Số liệu dưới đây dựa trên ${fmt(t.mega.draws)} kỳ Mega, ${fmt(t.power.draws)} kỳ Power và ${fmt(t.lotto.draws)} kỳ Lotto.</p>
@@ -156,6 +169,7 @@
     $('method').innerHTML = `<p><b>Giá trị vé</b> là số tiền bình quân một vé thu về: xác suất từng giải nhân tiền thực nhận, đã trừ thuế 10% phần giải vượt 20 triệu và rủi ro chia giải.</p>
       <p><b>Nhận định:</b> dưới ${d.rules.light_pct}% nghỉ, từ ${d.rules.light_pct}% chơi nhẹ ${d.rules.light_tickets} vé, từ ${d.rules.play_pct}% chơi ${d.rules.play_tickets} vé, tối đa ${d.rules.week_tickets} vé mỗi tuần. Đây là ngưỡng do trang đặt ra. Mốc hòa vốn là gần đúng vì vé bán thường tăng khi jackpot cao.</p>
       <p><b>Lotto 5/35:</b> khi Độc đắc vượt 12 tỷ mà chưa có người trúng, kỳ 21h ngày hôm sau là kỳ chia giải. Giải Nhất nhận 1/3, các giải Nhì đến Năm mỗi giải nhận 1/6 giá trị Độc đắc. Giá trị vé ở kỳ này bằng phần chia sau thuế trên mỗi vé cộng ${money(d.lotto_fixed)} giải cố định, số vé bán lấy theo tỷ lệ của kỳ chia giải gần nhất. Kỳ thường luôn chấm Nghỉ.</p>
+      <p><b>Sổ dự báo:</b> mỗi lượt chạy lưu lại số ước tính, nhận định và bộ số của các kỳ tới, rồi tự chấm khi có kết quả. Sổ này dùng để căn chỉnh công thức ước tính, không giúp dự đoán số trúng.</p>
       <p><b>Ước tính:</b> số vé bán suy từ số người trúng giải ba các kỳ gần đây, jackpot kỳ tới bằng mức hiện tại cộng bình quân 2 bước tăng gần nhất của chu kỳ đang chạy.</p>
       <p><b>Nguồn:</b> dãy số từ <a href="https://github.com/vietvudanh/vietlott-data">vietlott-data</a>, jackpot và số người trúng từ <a href="https://xosodaiphat.com/xs-mega-xo-so-mega-645.html">Xổ số Đại Phát</a>. Dữ liệu Lotto từ <a href="https://www.minhchinh.com/xo-so-dien-toan-lotto-535.html">Minh Chính</a>. Các nguồn được đối chiếu dãy số mỗi lần cập nhật. Danh sách kỳ chia giải cũ lấy từ báo chí nên có thể chưa đủ. Mega có dữ liệu từ kỳ ${t.mega.first_id}, jackpot lưu từ tháng 3/2026, Mega trước tháng 10/2026 làm tròn đến nghìn đồng.</p>`;
   }

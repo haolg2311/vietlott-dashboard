@@ -543,6 +543,85 @@ def update_portfolio(next_rows, all_draws, today, lotto_rows):
     }
 
 
+def pct_error(est, actual):
+    return round(abs(est - actual) / actual * 100, 1) if est and actual else None
+
+
+def actual_result(entry, all_draws, valid_rows, lotto):
+    """Trả về kết quả thật của một kỳ, hoặc None nếu chưa có đủ dãy số và jackpot."""
+    if entry["game"] == "lotto":
+        row = next((r for r in lotto["rows"] if r["id"] == entry["id"]), None)
+        if row is None:
+            return None
+        main, jackpot2 = row["numbers"][:5], None
+        tickets = row["winners"]["g5"] / LOTTO_ODDS["g5"] if row.get("winners") else None
+    else:
+        row = next((r for r in valid_rows[entry["game"]] if r["id"] == entry["id"]), None)
+        draw = next((d for d in all_draws[entry["game"]] if d["id"] == entry["id"]), None)
+        if row is None or draw is None:
+            return None
+        main, jackpot2 = draw["main"], row.get("jackpot2")
+        tickets = est_tickets(entry["game"], row) if row.get("g3") else None
+    hits = [len(set(t[:len(main)]) & set(main)) for t in entry["sets"]]
+    return {
+        "jackpot": row["jackpot"], "jackpot2": jackpot2, "tickets": round(tickets, -3) if tickets else None,
+        "jackpot_winners": row["jackpot_winners"], "numbers": row["numbers"], "set_hits": hits,
+        "jackpot_error_pct": pct_error(entry["jackpot_est"], row["jackpot"]),
+        "tickets_error_pct": pct_error(entry["tickets_est"], tickets),
+    }
+
+
+def update_forecast_log(all_rows, all_draws, valid_rows, lotto, now):
+    """Sổ dự báo: mỗi lượt chạy một dòng cho mỗi kỳ tới, không sửa số đã ghi của lượt trước."""
+    path = DATA / "forecast_log.json"
+    log = json.loads(path.read_text()) if path.exists() else []
+    run = now.strftime("%Y-%m-%d") + ("-sang" if now.hour < 14 else "-toi")
+    for e in log:
+        if e["actual"] is None:
+            e["actual"] = actual_result(e, all_draws, valid_rows, lotto)
+    log = [e for e in log if not (e["run"] == run and e["actual"] is None)]
+    done = {(e["game"], e["id"]) for e in log if e["actual"] is not None}
+    for r in all_rows:
+        if (r["game"], r["id"]) in done:
+            continue
+        target = r.get("target") or {}
+        log.append({
+            "run": run, "run_at": now.isoformat(timespec="minutes"), "game": r["game"], "id": r["id"],
+            "draw_date": r["date"], "slot": r.get("slot"), "jackpot_est": r["jackpot"],
+            "jackpot2_est": r["jackpot2"] or None, "tickets_est": r["tickets_est"], "ev_total": r["ev"]["total"],
+            "ev_pct": r["ev"]["pct"], "verdict": r["verdict"], "tickets": r["tickets"], "sets": r["sets"],
+            "status": r.get("status"), "draws_to": r.get("draws_to"), "target_id": target.get("id"),
+            "target_date": target.get("date"), "target_jackpot": target.get("jackpot"),
+            "target_tickets": target.get("tickets"), "target_ev": (target.get("ev") or {}).get("total"), "actual": None,
+        })
+    path.write_text("[\n" + ",\n".join(json.dumps(e, ensure_ascii=False, separators=(",", ":")) for e in log) + "\n]\n")
+
+    summary = {"forecasts": len(log), "start": log[0]["run_at"][:10], "games": {}}
+    pool = {"mega": (45, 6), "power": (55, 6), "lotto": (35, 5)}
+    for game, (n, k) in pool.items():
+        last = {}
+        for e in log:
+            if e["game"] == game and e["actual"] is not None:
+                last[e["id"]] = e
+        rows = list(last.values())
+        jack = [e["actual"]["jackpot_error_pct"] for e in rows if e["actual"]["jackpot_error_pct"] is not None]
+        tick = [e["actual"]["tickets_error_pct"] for e in rows if e["actual"]["tickets_error_pct"] is not None]
+        hits = [h for e in rows for h in e["actual"]["set_hits"]]
+        summary["games"][game] = {
+            "scored": len(rows), "jackpot_error": round(mean(jack), 1) if jack else None,
+            "tickets_error": round(mean(tick), 1) if tick else None,
+            "set_hits": round(mean(hits), 3) if hits else None, "set_hits_expected": round(k * k / n, 3),
+            "sets": len(hits),
+        }
+    errors = []
+    for x in lotto["rolldowns"]:
+        made = [e for e in log if e["game"] == "lotto" and e["target_id"] and e["id"] <= x["id"] and e["run_at"][:10] <= x["date"] and e["id"] > x["id"] - 30]
+        if made:
+            errors.append({"id": x["id"], "forecasts": len(made), "first_target": made[0]["target_id"], "last_target": made[-1]["target_id"]})
+    summary["rolldowns"] = errors
+    return summary
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-fetch", action="store_true", help="dùng dữ liệu đã có trong data/raw")
@@ -618,6 +697,7 @@ def main():
     all_rows = next_rows + [lotto_card]
     portfolio = update_portfolio(all_rows, all_draws, today, lotto["rows"])
     write_history({**all_draws, "lotto": lotto_draws}, valid_rows, lotto)
+    accuracy = update_forecast_log(all_rows, all_draws, valid_rows, lotto, now)
     latest["lotto"] = {
         "id": lotto["latest"]["id"], "date": lotto["latest"]["date"],
         "weekday": WEEKDAYS[date.fromisoformat(lotto["latest"]["date"]).weekday()],
@@ -640,7 +720,7 @@ def main():
         "next": sorted(all_rows, key=lambda r: (r["date"], r["game"] != "lotto")), "latest": latest, "ev_history": ev_history,
         "rolldowns": lotto["rolldowns"], "lotto_fixed": round(lotto_fixed_ev()), "lotto_odds": {k: round(1 / v) for k, v in LOTTO_ODDS.items()},
         "lotto_breakeven": {str(j): round(0.95 * j * 1e9 / (TICKET - lotto_fixed_ev()), -4) for j in (13, 20, 30)},
-        "breakeven": be, "tests": tests, "portfolio": portfolio, "filter_check": filter_check(all_draws),
+        "breakeven": be, "tests": tests, "portfolio": portfolio, "accuracy": accuracy, "filter_check": filter_check(all_draws),
         "rules": {"ticket": TICKET, "play_pct": PLAY_PCT, "light_pct": LIGHT_PCT, "play_tickets": PLAY_TICKETS,
                   "light_tickets": LIGHT_TICKETS, "week_tickets": WEEK_TICKETS, "hot_window": HOT_WINDOW},
         "odds": {g: {k: round(1 / v) for k, v in odds(g).items()} for g in GAMES},

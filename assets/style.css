@@ -93,10 +93,12 @@ summary { cursor: pointer; font-weight: 600; padding: 12px 0; min-height: 44px; 
 .more-info details { border-bottom: 1px solid var(--line); }
 .more-info details > div { padding-bottom: 12px; color: var(--ink-2); }
 .more-info p { margin: 0 0 10px; }
+.facts.plain { background: var(--surface); border-radius: 12px; padding: 6px 14px; margin: 0; }
+.facts.plain div:last-child { border-bottom: 0; }
 .more-info b { color: var(--ink); }
 .more-info a { color: var(--red); }
 .facts { display: grid; gap: 0; margin: 0 0 10px; }
-.facts div { display: grid; grid-template-columns: minmax(0, 1fr) 56px 56px 56px; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.facts div { display: grid; grid-template-columns: minmax(0, 1fr) 62px 62px 62px; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
 .facts div > :not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
 .footer { padding-top: 20px; padding-bottom: 32px; padding-bottom: max(32px, env(safe-area-inset-bottom)); font-size: 13px; color: var(--ink-2); }
 .footer p { margin: 0 0 4px; }

@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-03T16:32+07:00",
+ "generated_at": "2026-11-03T16:39+07:00",
  "today": "2026-11-03",
  "weekday": "Thứ 3",
  "commentary": {
@@ -1089,6 +1089,37 @@
     "status": "pending"
    }
   ]
+ },
+ "accuracy": {
+  "forecasts": 3,
+  "start": "2026-11-03",
+  "games": {
+   "mega": {
+    "scored": 0,
+    "jackpot_error": null,
+    "tickets_error": null,
+    "set_hits": null,
+    "set_hits_expected": 0.8,
+    "sets": 0
+   },
+   "power": {
+    "scored": 0,
+    "jackpot_error": null,
+    "tickets_error": null,
+    "set_hits": null,
+    "set_hits_expected": 0.655,
+    "sets": 0
+   },
+   "lotto": {
+    "scored": 0,
+    "jackpot_error": null,
+    "tickets_error": null,
+    "set_hits": null,
+    "set_hits_expected": 0.714,
+    "sets": 0
+   }
+  },
+  "rolldowns": []
  },
  "filter_check": {
   "tickets": 112080,
