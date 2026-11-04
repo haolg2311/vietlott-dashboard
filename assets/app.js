@@ -48,7 +48,7 @@
       <div class="bar" role="img" aria-label="Độc đắc so với mốc chia giải 12 tỷ"><i style="width:${Math.min(100, n.current_jackpot / n.trigger * 100)}%"></i></div>
       <p class="bar-note">${esc(note)}</p>
       ${n.status === 'rolldown' ? '' : `<p class="bar-note">Ước tính ở kỳ chia giải: vé 10.000đ có giá trị khoảng ${money(t.ev.total)}</p>`}
-      <div class="picks"><h3>${esc(title)}</h3>${n.sets.map((s) => balls(s.slice(0, 5), s.slice(5))).join('')}</div>
+      <div class="picks"><h3>${esc(title)}</h3>${n.sets.slice(0, 2).map((s) => balls(s.slice(0, 5), s.slice(5))).join('')}</div>
       ${lastBlock(last)}</article>`;
   }
 
@@ -64,7 +64,7 @@
       <div class="bar" role="img" aria-label="Giá trị vé bằng ${pct(n.ev.pct)} giá mua"><i style="width:${Math.min(100, n.ev.pct)}%"></i></div>
       <p class="bar-note">Bằng ${pct(n.ev.pct)} giá vé${power ? `, Jackpot 2 ước tính ${billions(n.jackpot2)}` : ''}</p>
       ${n.hold ? '<p class="bar-note">Giữ ngân sách tuần cho kỳ chia giải Lotto 5/35</p>' : ''}
-      <div class="picks"><h3>${esc(title)}</h3>${n.sets.map((s) => balls(s)).join('')}</div>
+      <div class="picks"><h3>${esc(title)}</h3>${n.sets.slice(0, 2).map((s) => balls(s)).join('')}</div>
       ${lastBlock(last)}</article>`;
   }
 
