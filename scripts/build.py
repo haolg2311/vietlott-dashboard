@@ -399,6 +399,17 @@ def lotto_prize(ticket, row):
     return (LOTTO_BASE["kk"] if sp else 0), None
 
 
+def split_values(row):
+    """Tính giá trị từng giải ở kỳ chia giải khi nguồn chỉ ghi giá trị cơ bản."""
+    tiers = [t for t in LOTTO_SHARE if row["winners"].get(t)]
+    spare = sum(LOTTO_SHARE[t] for t in LOTTO_SHARE if t not in tiers)
+    out = dict(row["values"])
+    for t in tiers:
+        share = LOTTO_SHARE[t] + spare / len(tiers)
+        out[t] = LOTTO_BASE[t] + int(row["jackpot"] * share / row["winners"][t] // 5000 * 5000)
+    return out
+
+
 def lotto_block(draws, store, warnings, today):
     by_id = {d["id"]: d for d in draws}
     rows = []
@@ -410,6 +421,15 @@ def lotto_block(draws, store, warnings, today):
             continue
         rows.append(r)
     known = {x["id"] for x in store["rolldowns"]}
+    for a, b in zip(rows, rows[1:]):
+        if a["jackpot"] > LOTTO["trigger"] and a["jackpot_winners"] == 0 and b["jackpot"] < a["jackpot"] and a.get("winners"):
+            if a["values"]["g2"] == LOTTO_BASE["g2"]:
+                a["values"] = split_values(a)
+            if a["id"] not in known:
+                known.add(a["id"])
+                store["rolldowns"].append({"id": a["id"], "date": a["date"], "jackpot": a["jackpot"],
+                                           "tickets": round(a["winners"]["kk"] / LOTTO_ODDS["kk"], -4),
+                                           "basis": "Suy từ số giải Khuyến khích"})
     for r in rows:
         if r["jackpot_winners"] == 0 and r["values"]["g2"] > LOTTO_BASE["g2"] and r["id"] not in known and r.get("winners"):
             store["rolldowns"].append({"id": r["id"], "date": r["date"], "jackpot": r["jackpot"],
@@ -441,7 +461,8 @@ def lotto_block(draws, store, warnings, today):
     next_day, next_slot = step_draw(day, slot)
     next_id = latest["id"] + 1
     if armed_date and next_day > armed_date:
-        warnings.append("Lotto 5/35: đã qua kỳ chia giải dự kiến, đang chờ số liệu thật của kỳ đó.")
+        if last["id"] < last_raw["id"]:
+            warnings.append("Lotto 5/35: đã qua kỳ chia giải dự kiến, đang chờ số liệu thật của kỳ đó.")
         armed_date, jackpot = None, LOTTO["seed_jp"]
     draws_to = 0 if armed_date else max(1, math.ceil((LOTTO["trigger"] - jackpot + 1) / step))
     if armed_date:
@@ -715,7 +736,9 @@ def main():
         all_rest = all(r["tickets"] == 0 for r in all_rows)
         commentary = {
             "date": today.isoformat(), "auto": True,
-            "headline": "Các kỳ tới chưa đáng mua vé." if all_rest else f"{best['name']} là kỳ đáng cân nhắc nhất.",
+            "headline": "Hôm nay có kỳ chia giải Lotto 5/35." if lotto["status"] == "rolldown"
+            else "Sắp có kỳ chia giải Lotto 5/35." if lotto["status"] in ("near", "armed")
+            else "Các kỳ tới chưa đáng mua vé." if all_rest else f"{best['name']} là kỳ đáng cân nhắc nhất.",
             "paragraphs": [f"{best['name']} đang có giá trị kỳ vọng cao hơn, khoảng {best['ev']['total']:,}đ trên vé 10.000đ.".replace(",", ".")],
         }
     out = {
