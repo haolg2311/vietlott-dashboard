@@ -440,6 +440,9 @@ def lotto_block(draws, store, warnings, today):
 
     next_day, next_slot = step_draw(day, slot)
     next_id = latest["id"] + 1
+    if armed_date and next_day > armed_date:
+        warnings.append("Lotto 5/35: đã qua kỳ chia giải dự kiến, đang chờ số liệu thật của kỳ đó.")
+        armed_date, jackpot = None, LOTTO["seed_jp"]
     draws_to = 0 if armed_date else max(1, math.ceil((LOTTO["trigger"] - jackpot + 1) / step))
     if armed_date:
         target_day = armed_date

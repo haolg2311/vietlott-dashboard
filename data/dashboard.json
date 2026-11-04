@@ -1,66 +1,127 @@
 {
- "generated_at": "2026-11-04T09:26+07:00",
+ "generated_at": "2026-11-04T15:19+07:00",
  "today": "2026-11-04",
  "weekday": "Thứ 4",
  "commentary": {
   "date": "2026-11-04",
-  "headline": "Nghỉ tay, chờ Lotto chia giải.",
+  "headline": "Tối nay có kỳ chia giải Lotto 5/35.",
   "paragraphs": [
-   "Lotto 5/35 có thể chia giải Độc đắc vào kỳ 990, quay số 21h ngày 05/11 (vé dừng bán 20h30); giá trị vé lúc đó khoảng 10.354đ, chỉ là ước tính và phụ thuộc số vé bán ra. Giá trị vé Mega 6/45 kỳ 1584 khoảng 4.019đ và Power 6/55 kỳ 1420 khoảng 3.340đ nên vẫn nên nghỉ; nhận định sẽ thay đổi nếu có người trúng Độc đắc Lotto trước kỳ 990 hoặc jackpot các trò tăng mạnh."
+   "Kỳ 988 quay lúc 21h, vé dừng bán 20h30, nếu không có người trúng Độc đắc thì giá trị được chia cho giải Nhất đến giải Năm. Giá trị vé ước tính khoảng 10.354đ nhưng phụ thuộc số vé bán, hòa vốn nếu dưới khoảng 1,73 triệu vé."
   ]
  },
- "warnings": [
-  "Power 6/55: chưa có jackpot kỳ 1419, sẽ cập nhật ở lượt sau.",
-  "Lotto 5/35: chưa có số liệu kỳ 986, sẽ cập nhật ở lượt sau."
- ],
+ "warnings": [],
  "next": [
   {
    "game": "lotto",
    "name": "Lotto 5/35",
-   "id": 987,
+   "id": 988,
    "date": "2026-11-04",
-   "slot": "13h",
+   "slot": "21h",
    "weekday": "Thứ 4",
-   "jackpot": 11536000000,
+   "jackpot": 15072000000.0,
    "jackpot2": 0,
-   "tickets_est": 271000.0,
+   "tickets_est": 358000.0,
    "ev": {
     "fixed": 1734,
-    "jackpot": 2575,
+    "jackpot": 8619,
     "jackpot2": 0,
-    "total": 4310,
-    "pct": 43.1
+    "total": 10354,
+    "pct": 103.5
    },
-   "verdict": "Nghỉ",
-   "tickets": 0,
+   "verdict": "Chơi",
+   "tickets": 10,
    "sets": [
     [
-     16,
-     23,
-     26,
+     6,
+     9,
+     18,
+     22,
      34,
-     35,
-     4
+     1
     ],
     [
-     17,
-     19,
-     24,
+     6,
+     8,
+     12,
+     22,
      33,
+     9
+    ],
+    [
+     5,
+     12,
+     13,
+     28,
+     35,
+     12
+    ],
+    [
+     12,
+     23,
+     25,
+     30,
+     35,
+     12
+    ],
+    [
+     1,
+     13,
+     15,
+     31,
+     33,
+     6
+    ],
+    [
+     2,
+     10,
+     11,
+     25,
+     35,
+     12
+    ],
+    [
+     3,
+     5,
+     16,
+     29,
+     35,
+     9
+    ],
+    [
+     4,
+     11,
+     22,
+     27,
+     32,
+     8
+    ],
+    [
+     11,
+     22,
+     28,
+     32,
      34,
+     11
+    ],
+    [
+     5,
+     10,
+     26,
+     31,
+     32,
      4
     ]
    ],
-   "status": "near",
-   "current_jackpot": 10806423500,
+   "status": "rolldown",
+   "current_jackpot": 13766218000,
    "trigger": 12000000000.0,
-   "draws_to": 2,
+   "draws_to": 0,
    "target": {
-    "id": 990,
-    "date": "2026-11-05",
-    "weekday": "Thứ 5",
-    "jackpot": 13730000000,
-    "tickets": 1520000.0,
+    "id": 988,
+    "date": "2026-11-04",
+    "weekday": "Thứ 4",
+    "jackpot": 15070000000.0,
+    "tickets": 1670000.0,
     "ev": {
      "share": 8619,
      "fixed": 1734,
@@ -113,15 +174,15 @@
    "id": 1420,
    "date": "2026-11-05",
    "weekday": "Thứ 5",
-   "jackpot": 39028000000,
-   "jackpot2": 5240000000,
-   "tickets_est": 1470000.0,
+   "jackpot": 41973000000,
+   "jackpot2": 5568000000,
+   "tickets_est": 1390000.0,
    "ev": {
     "fixed": 1317,
-    "jackpot": 1181,
-    "jackpot2": 842,
-    "total": 3340,
-    "pct": 33.4
+    "jackpot": 1272,
+    "jackpot2": 902,
+    "total": 3492,
+    "pct": 34.9
    },
    "verdict": "Nghỉ",
    "tickets": 0,
@@ -178,24 +239,24 @@
    "extra": [
     14
    ],
-   "jackpot": 36604726050,
+   "jackpot": 39296824950,
    "jackpot_winners": 0
   },
   "lotto": {
-   "id": 986,
-   "date": "2026-11-03",
-   "weekday": "Thứ 3",
+   "id": 987,
+   "date": "2026-11-04",
+   "weekday": "Thứ 4",
    "main": [
-    12,
-    25,
-    26,
-    33,
-    35
+    2,
+    7,
+    8,
+    13,
+    14
    ],
    "extra": [
-    6
+    7
    ],
-   "jackpot": 10806423500,
+   "jackpot": 13766218000,
    "jackpot_winners": 0
   }
  },
@@ -414,13 +475,6 @@
   ],
   "power": [
    {
-    "id": 1389,
-    "date": "2026-08-25",
-    "jackpot": 41498958000,
-    "winners": 0,
-    "pct": 32.4
-   },
-   {
     "id": 1390,
     "date": "2026-08-27",
     "jackpot": 43755025350,
@@ -622,6 +676,13 @@
     "jackpot": 36604726050,
     "winners": 0,
     "pct": 32.3
+   },
+   {
+    "id": 1419,
+    "date": "2026-11-03",
+    "jackpot": 39296824950,
+    "winners": 0,
+    "pct": 33.5
    }
   ]
  },
@@ -694,9 +755,9 @@
    "100": 83400000000.0
   },
   "power": {
-   "45": 77300000000.0,
-   "55": 110400000000.0,
-   "100": 259000000000.0
+   "45": 75200000000.0,
+   "55": 108200000000.0,
+   "100": 256700000000.0
   }
  },
  "tests": {
@@ -1063,7 +1124,7 @@
  },
  "portfolio": {
   "start": "2026-11-02",
-  "week_used": 0,
+  "week_used": 10,
   "week_cap": 10,
   "spent": 0,
   "returned": 0,
@@ -1071,6 +1132,178 @@
   "skipped": 1,
   "resolved": 1,
   "log": [
+   {
+    "game": "lotto",
+    "id": 988,
+    "date": "2026-11-04",
+    "verdict": "Chơi",
+    "ev_pct": 103.5,
+    "tickets": [
+     [
+      6,
+      9,
+      18,
+      22,
+      34,
+      1
+     ],
+     [
+      6,
+      8,
+      12,
+      22,
+      33,
+      9
+     ],
+     [
+      5,
+      12,
+      13,
+      28,
+      35,
+      12
+     ],
+     [
+      12,
+      23,
+      25,
+      30,
+      35,
+      12
+     ],
+     [
+      1,
+      13,
+      15,
+      31,
+      33,
+      6
+     ],
+     [
+      2,
+      10,
+      11,
+      25,
+      35,
+      12
+     ],
+     [
+      3,
+      5,
+      16,
+      29,
+      35,
+      9
+     ],
+     [
+      4,
+      11,
+      22,
+      27,
+      32,
+      8
+     ],
+     [
+      11,
+      22,
+      28,
+      32,
+      34,
+      11
+     ],
+     [
+      5,
+      10,
+      26,
+      31,
+      32,
+      4
+     ]
+    ],
+    "baseline": [
+     [
+      9,
+      11,
+      15,
+      19,
+      22,
+      3
+     ],
+     [
+      2,
+      15,
+      22,
+      24,
+      25,
+      2
+     ],
+     [
+      6,
+      8,
+      12,
+      17,
+      25,
+      2
+     ],
+     [
+      10,
+      20,
+      26,
+      30,
+      33,
+      8
+     ],
+     [
+      1,
+      17,
+      19,
+      31,
+      32,
+      6
+     ],
+     [
+      5,
+      11,
+      12,
+      13,
+      20,
+      12
+     ],
+     [
+      2,
+      3,
+      14,
+      15,
+      16,
+      10
+     ],
+     [
+      6,
+      18,
+      24,
+      26,
+      29,
+      6
+     ],
+     [
+      5,
+      10,
+      15,
+      17,
+      20,
+      3
+     ],
+     [
+      9,
+      11,
+      16,
+      25,
+      30,
+      10
+     ]
+    ],
+    "status": "pending"
+   },
    {
     "game": "power",
     "id": 1420,
@@ -1116,7 +1349,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 7,
+  "forecasts": 10,
   "start": "2026-11-03",
   "games": {
    "mega": {
@@ -1128,20 +1361,20 @@
     "sets": 0
    },
    "power": {
-    "scored": 0,
-    "jackpot_error": null,
-    "tickets_error": null,
-    "set_hits": null,
+    "scored": 1,
+    "jackpot_error": 0.7,
+    "tickets_error": 2.1,
+    "set_hits": 0,
     "set_hits_expected": 0.655,
-    "sets": 0
+    "sets": 2
    },
    "lotto": {
-    "scored": 0,
-    "jackpot_error": null,
-    "tickets_error": null,
-    "set_hits": null,
+    "scored": 2,
+    "jackpot_error": 11.1,
+    "tickets_error": 33.9,
+    "set_hits": 0.25,
     "set_hits_expected": 0.714,
-    "sets": 0
+    "sets": 4
    }
   },
   "rolldowns": []
