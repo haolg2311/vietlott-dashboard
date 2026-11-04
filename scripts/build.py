@@ -421,8 +421,14 @@ def lotto_block(draws, store, warnings, today):
             continue
         rows.append(r)
     known = {x["id"] for x in store["rolldowns"]}
-    for a, b in zip(rows, rows[1:]):
-        if a["jackpot"] > LOTTO["trigger"] and a["jackpot_winners"] == 0 and b["jackpot"] < a["jackpot"] and a.get("winners"):
+    row_of = {r["id"]: r for r in rows}
+    for i, a in enumerate(rows):
+        if a["jackpot"] <= LOTTO["trigger"] or a["jackpot_winners"] > 0 or not a.get("winners"):
+            continue
+        after = rows[i + 1] if i + 1 < len(rows) else None
+        earlier = row_of.get(a["id"] - 2)
+        due = draw_slot(a["id"]) == "21h" and earlier is not None and earlier["jackpot"] > LOTTO["trigger"]
+        if (after is not None and after["jackpot"] < a["jackpot"]) or (after is None and due):
             if a["values"]["g2"] == LOTTO_BASE["g2"]:
                 a["values"] = split_values(a)
             if a["id"] not in known:
@@ -441,11 +447,16 @@ def lotto_block(draws, store, warnings, today):
     last_raw = draws[-1]
     if last["id"] < last_raw["id"]:
         warnings.append(f"Lotto 5/35: chưa có số liệu kỳ {last_raw['id']}, sẽ cập nhật ở lượt sau.")
-    if last["id"] > last_raw["id"]:
-        draws = draws + [{"id": last["id"], "date": last["date"], "main": last["numbers"][:5], "extra": last["numbers"][5:]}]
+    for r in rows:
+        if r["id"] > draws[-1]["id"]:
+            draws.append({"id": r["id"], "date": r["date"], "main": r["numbers"][:5], "extra": r["numbers"][5:]})
     latest = draws[-1]
     day, slot = date.fromisoformat(latest["date"]), draw_slot(latest["id"])
-    rises = [b["jackpot"] - a["jackpot"] for a, b in zip(rows, rows[1:]) if b["jackpot"] > a["jackpot"]][-3:]
+    start = max((i + 1 for i, (a, b) in enumerate(zip(rows, rows[1:])) if b["jackpot"] < a["jackpot"]), default=0)
+    if rows[-1]["id"] in known:
+        start = len(rows)
+    cycle = rows[start:]
+    rises = [b["jackpot"] - a["jackpot"] for a, b in zip(cycle, cycle[1:]) if b["jackpot"] > a["jackpot"]][-3:]
     step = mean(rises) if rises else 240e6
     tickets = mean(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in [x for x in rows if x.get("winners")][-3:])
     jackpot = last["jackpot"] if last["jackpot_winners"] == 0 and last["values"]["g2"] == LOTTO_BASE["g2"] else LOTTO["seed_jp"]
@@ -666,6 +677,10 @@ def main():
         rows = []
         for r in sorted(jackpots[game], key=lambda x: x["id"]):
             d = by_id.get(r["id"])
+            if d is None and r["id"] > draws[-1]["id"]:
+                d = {"id": r["id"], "date": r["date"], "main": r["numbers"][:6], "extra": r["numbers"][6:]}
+                draws.append(d)
+                by_id[r["id"]] = d
             if d is None:
                 warnings.append(f"{info['name']} kỳ {r['id']}: chưa có trong dữ liệu kết quả.")
             elif d["main"] + d["extra"] != r["numbers"] or d["date"] != r["date"]:

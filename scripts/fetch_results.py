@@ -107,11 +107,7 @@ def merge(rows, found, floor):
 
 
 def lotto_date(i):
-    for line in reversed((DATA / "raw" / "power535.jsonl").read_text().splitlines()):
-        r = json.loads(line)
-        if int(r["id"]) == i:
-            return r["date"]
-    return None
+    return (date(2025, 6, 29) + timedelta(days=(i - 1) // 2)).isoformat()
 
 
 def main():
@@ -140,8 +136,7 @@ def main():
         time.sleep(2)
     floor = store["rows"][-1]["id"]
     for i, r in found.items():
-        r["date"] = lotto_date(i) or r.get("date")
-    found = {i: r for i, r in found.items() if r.get("date")}
+        r["date"] = lotto_date(i)
     store["rows"], added = merge(store["rows"], found, floor)
     (DATA / "lotto.json").write_text(json.dumps(store, ensure_ascii=False, indent=0) + "\n")
     report["lotto"] = {"read": len(found), "added": added, "errors": errors}

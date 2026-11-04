@@ -24,6 +24,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -q scipy
+      - name: Xóa nhánh thử
+        run: git push origin --delete probe probe-results || true
       - name: Tải dãy số mới nhất
         run: python scripts/build.py
       - name: Lấy jackpot và số giải
