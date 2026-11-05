@@ -1,10 +1,7 @@
 name: Cập nhật số liệu
 on:
   schedule:
-    - cron: "30 0 * * *"   # 07:30 giờ Việt Nam
-    - cron: "45 6 * * *"   # 13:45
-    - cron: "20 12 * * *"  # 19:20
-    - cron: "50 14 * * *"  # 21:50
+    - cron: "37 1-23/2 * * *"   # phút 37 các giờ chẵn theo giờ Việt Nam, GitHub có thể chạy trễ
   workflow_dispatch:
   push:
     branches: [main]
@@ -34,6 +31,12 @@ jobs:
         run: |
           git config user.name "dashboard-bot"
           git config user.email "dashboard-bot@users.noreply.github.com"
+          today=$(TZ=Asia/Ho_Chi_Minh date +%Y%m%d)
+          last=$(TZ=Asia/Ho_Chi_Minh git log -1 --format=%cd --date=format-local:%Y%m%d)
+          if git diff --quiet -- data/jackpots.json data/lotto.json data/raw data/commentary.json && [ "$today" = "$last" ]; then
+            echo "Không có số liệu mới"
+            exit 0
+          fi
           git add data
           git diff --cached --quiet && exit 0
           git commit -q -m "Tự cập nhật số liệu $(TZ=Asia/Ho_Chi_Minh date +'%d/%m %H:%M')"

@@ -357,6 +357,16 @@ def rolldown_ev(jackpot, tickets):
     return {"share": round(extra), "fixed": round(lotto_fixed_ev()), "total": round(total), "pct": round(total / TICKET * 100, 1)}
 
 
+def rolldown_ahead(jackpot, tickets):
+    """Giá trị vé trước kỳ quay. Có người trúng Độc đắc thì không chia giải, tiền về người trúng."""
+    split = rolldown_ev(jackpot, tickets)
+    miss = math.exp(-tickets * LOTTO_ODDS["jp"])
+    share = miss * split["share"] + (1 - miss) * net(jackpot) / tickets
+    total = share + lotto_fixed_ev()
+    return {"share": round(share), "fixed": split["fixed"], "total": round(total), "pct": round(total / TICKET * 100, 1),
+            "hit_pct": round((1 - miss) * 100)}
+
+
 def draw_slot(draw_id):
     """Mỗi ngày có 2 kỳ: kỳ số lẻ quay lúc 13h, kỳ số chẵn quay lúc 21h."""
     return "13h" if draw_id % 2 else "21h"
@@ -452,9 +462,8 @@ def lotto_block(draws, store, warnings, today):
             draws.append({"id": r["id"], "date": r["date"], "main": r["numbers"][:5], "extra": r["numbers"][5:]})
     latest = draws[-1]
     day, slot = date.fromisoformat(latest["date"]), draw_slot(latest["id"])
-    start = max((i + 1 for i, (a, b) in enumerate(zip(rows, rows[1:])) if b["jackpot"] < a["jackpot"]), default=0)
-    if rows[-1]["id"] in known:
-        start = len(rows)
+    start = max((i + 1 for i, r in enumerate(rows) if r["jackpot_winners"] > 0 or r["id"] in known), default=0)
+    start = max([start] + [i + 1 for i, (a, b) in enumerate(zip(rows, rows[1:])) if b["jackpot"] < a["jackpot"]])
     cycle = rows[start:]
     rises = [b["jackpot"] - a["jackpot"] for a, b in zip(cycle, cycle[1:]) if b["jackpot"] > a["jackpot"]][-3:]
     step = mean(rises) if rises else 240e6
@@ -492,7 +501,7 @@ def lotto_block(draws, store, warnings, today):
     est_jackpot = jackpot + step * (gap + 1)
     ratio = store["rolldowns"][-1]["tickets"] / store["rolldowns"][-1]["jackpot"]
     est_tickets = est_jackpot * ratio
-    roll = rolldown_ev(est_jackpot, est_tickets)
+    roll = rolldown_ahead(est_jackpot, est_tickets)
     is_rolldown = armed_date is not None and (next_day, next_slot) == (armed_date, "21h")
     status = "rolldown" if is_rolldown else "armed" if armed_date else "near" if draws_to <= LOTTO["near_draws"] else "normal"
 
@@ -519,6 +528,20 @@ def lotto_block(draws, store, warnings, today):
                    "jackpot": round(est_jackpot, -7), "tickets": round(est_tickets, -4), "ev": roll},
         "rolldowns": book, "rows": rows, "latest": latest,
     }
+
+
+def due_lotto(now):
+    """Kỳ Lotto gần nhất đáng lẽ đã có số liệu, chừa 3 giờ sau giờ quay."""
+    n = (now.date() - date(2025, 6, 29)).days * 2
+    return n + 1 if now.hour >= 16 else n
+
+
+def due_game(days, now):
+    """Ngày quay Mega hoặc Power gần nhất đáng lẽ đã có số liệu, chừa 3 giờ sau 18h."""
+    d = now.date() - timedelta(days=0 if now.hour >= 21 else 1)
+    while d.weekday() not in days:
+        d -= timedelta(days=1)
+    return d
 
 
 def week_start(d):
@@ -670,6 +693,7 @@ def main():
     jackpots = json.loads((DATA / "jackpots.json").read_text())
     all_draws = {g: load_draws(g) for g in GAMES}
     warnings, next_rows, ev_history, be, tests, latest, valid_rows = [], [], {}, {}, {}, {}, {}
+    stale = []
 
     for game, info in GAMES.items():
         draws = all_draws[game]
@@ -694,6 +718,8 @@ def main():
         last_date = date.fromisoformat(last["date"])
         if (today - last_date).days > 3:
             warnings.append(f"{info['name']}: dữ liệu kết quả dừng ở {last['date']}.")
+        if not rows or rows[-1]["date"] < due_game(info["days"], now).isoformat():
+            stale.append(info["name"])
 
         tickets = recent_tickets(game, rows)
         est = est_next(game, rows)
@@ -746,19 +772,29 @@ def main():
     }
     commentary_file = DATA / "commentary.json"
     commentary = json.loads(commentary_file.read_text()) if commentary_file.exists() else {}
-    if commentary.get("date") != today.isoformat():
+    if lotto["rows"][-1]["id"] < due_lotto(now):
+        stale.append(LOTTO["name"])
+    for name in stale:
+        if not any(w.startswith(name) for w in warnings):
+            warnings.append(f"{name}: chưa có số liệu kỳ mới nhất, nhận định có thể chưa cập nhật.")
+    if commentary.get("date") == today.isoformat() and "status" not in commentary:
+        commentary["status"] = lotto["status"]
+        commentary_file.write_text(json.dumps(commentary, ensure_ascii=False, indent=1) + "\n")
+    if stale or commentary.get("date") != today.isoformat() or commentary.get("status") != lotto["status"]:
         best = max(all_rows, key=lambda r: r["ev"]["pct"])
         all_rest = all(r["tickets"] == 0 for r in all_rows)
         commentary = {
             "date": today.isoformat(), "auto": True,
-            "headline": "Hôm nay có kỳ chia giải Lotto 5/35." if lotto["status"] == "rolldown"
+            "headline": "Đang chờ số liệu kỳ mới." if stale
+            else "Hôm nay có kỳ chia giải Lotto 5/35." if lotto["status"] == "rolldown"
             else "Sắp có kỳ chia giải Lotto 5/35." if lotto["status"] in ("near", "armed")
             else "Các kỳ tới chưa đáng mua vé." if all_rest else f"{best['name']} là kỳ đáng cân nhắc nhất.",
-            "paragraphs": [f"{best['name']} đang có giá trị kỳ vọng cao hơn, khoảng {best['ev']['total']:,}đ trên vé 10.000đ.".replace(",", ".")],
+            "paragraphs": ["Đang chờ số liệu kỳ mới, nhận định sẽ cập nhật ở lượt sau." if stale else
+                           f"{best['name']} đang có giá trị vé cao nhất, khoảng {best['ev']['total']:_}đ trên vé 10.000đ.".replace("_", ".")],
         }
     out = {
         "generated_at": now.isoformat(timespec="minutes"), "today": today.isoformat(),
-        "weekday": WEEKDAYS[today.weekday()], "commentary": commentary, "warnings": warnings,
+        "weekday": WEEKDAYS[today.weekday()], "commentary": commentary, "warnings": warnings, "stale": stale,
         "next": sorted(all_rows, key=lambda r: (r["date"], r["game"] != "lotto")), "latest": latest, "ev_history": ev_history,
         "rolldowns": lotto["rolldowns"], "lotto_fixed": round(lotto_fixed_ev()), "lotto_odds": {k: round(1 / v) for k, v in LOTTO_ODDS.items()},
         "lotto_breakeven": {str(j): round(0.95 * j * 1e9 / (TICKET - lotto_fixed_ev()), -4) for j in (13, 20, 30)},

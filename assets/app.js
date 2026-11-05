@@ -34,7 +34,7 @@
   function lottoCard(n, last) {
     const t = n.target;
     const note = {
-      rolldown: `Kỳ này là kỳ chia giải, vé dừng bán lúc 20h30`,
+      rolldown: `Kỳ chia giải nếu không có người trúng Độc đắc, khả năng có người trúng khoảng ${t.ev.hit_pct}%. Vé dừng bán lúc 20h30`,
       armed: `Đã vượt 12 tỷ. Kỳ chia giải dự kiến là kỳ ${t.id}, 21h ${day(t.date)} ${dm(t.date)}`,
       near: `Sắp vượt 12 tỷ, còn khoảng ${n.draws_to} kỳ nếu chưa có người trúng`,
       normal: `Còn khoảng ${n.draws_to} kỳ nữa vượt 12 tỷ nếu chưa có người trúng`,
@@ -108,7 +108,7 @@
     const million = (n) => (n / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' triệu vé';
     $('value-title').textContent = lotto ? 'Các kỳ chia giải đã ghi nhận' : 'Giá trị vé theo kỳ';
     $('value-note').textContent = lotto
-      ? 'Ở kỳ chia giải, Độc đắc được trả hết cho các vé trúng, nên giá trị vé phụ thuộc vào số vé bán. Vé bán ngày càng nhiều nên lợi thế đang giảm dần.'
+      ? 'Ở kỳ chia giải, Độc đắc được trả hết cho các vé trúng, nên giá trị vé phụ thuộc vào số vé bán. Độc đắc còn tăng theo số vé bán, nên mức hòa vốn tính theo Độc đắc lúc quay. Nếu có người trúng Độc đắc thì kỳ đó không chia giải.'
       : '';
     $('marks').innerHTML = lotto
       ? `<div><dt>Hòa vốn, Độc đắc 13 tỷ</dt><dd>${million(lb['13'])}</dd></div><div><dt>Hòa vốn, Độc đắc 20 tỷ</dt><dd>${million(lb['20'])}</dd></div><div><dt>Hòa vốn, Độc đắc 30 tỷ</dt><dd>${million(lb['30'])}</dd></div>`
@@ -125,7 +125,7 @@
     const warn = [...d.warnings];
     if (stale) warn.unshift(`Trang chưa được cập nhật từ ${dmy(d.today)}, số liệu có thể đã cũ.`);
     const lotto = d.next.find((n) => n.game === 'lotto');
-    if (lotto.status === 'rolldown') warn.unshift(`Hôm nay có kỳ chia giải Lotto 5/35, kỳ ${lotto.id} lúc 21h. Vé dừng bán lúc 20h30.`);
+    if (lotto.status === 'rolldown') warn.unshift(`Hôm nay là kỳ chia giải Lotto 5/35 nếu không có người trúng Độc đắc, kỳ ${lotto.id} lúc 21h. Vé dừng bán lúc 20h30.`);
     if (lotto.status === 'armed') warn.unshift(`Lotto 5/35 đã vượt 12 tỷ. Kỳ chia giải dự kiến là kỳ ${lotto.target.id}, 21h ${dmy(lotto.target.date)}, vé dừng bán lúc 20h30.`);
     if (lotto.status === 'near') warn.unshift(`Lotto 5/35 sắp vượt 12 tỷ, tạm giữ ngân sách tuần cho kỳ chia giải.`);
     $('alerts').innerHTML = warn.map((w) => `<p>${esc(w)}</p>`).join('');
@@ -168,7 +168,7 @@
       <p>Bộ số gợi ý không làm tăng khả năng trúng: tỷ lệ vé trúng từ giải ba trở lên là ${pct(f.filter_win_pct, 2)}, so với ${pct(f.random_win_pct, 2)} khi chọn ngẫu nhiên. Việc tránh số đông người chọn mới là giả thuyết, dữ liệu hiện chưa đủ chứng minh.</p>`;
     $('method').innerHTML = `<p><b>Giá trị vé</b> là số tiền bình quân một vé thu về: xác suất từng giải nhân tiền thực nhận, đã trừ thuế 10% phần giải vượt 20 triệu và rủi ro chia giải.</p>
       <p><b>Nhận định:</b> dưới ${d.rules.light_pct}% nghỉ, từ ${d.rules.light_pct}% chơi nhẹ ${d.rules.light_tickets} vé, từ ${d.rules.play_pct}% chơi ${d.rules.play_tickets} vé, tối đa ${d.rules.week_tickets} vé mỗi tuần. Đây là ngưỡng do trang đặt ra. Mốc hòa vốn là gần đúng vì vé bán thường tăng khi jackpot cao.</p>
-      <p><b>Lotto 5/35:</b> khi Độc đắc vượt 12 tỷ mà chưa có người trúng, kỳ 21h ngày hôm sau là kỳ chia giải. Giải Nhất nhận 1/3, các giải Nhì đến Năm mỗi giải nhận 1/6 giá trị Độc đắc. Giá trị vé ở kỳ này bằng phần chia sau thuế trên mỗi vé cộng ${money(d.lotto_fixed)} giải cố định, số vé bán lấy theo tỷ lệ của kỳ chia giải gần nhất. Kỳ thường luôn chấm Nghỉ.</p>
+      <p><b>Lotto 5/35:</b> khi Độc đắc vượt 12 tỷ mà chưa có người trúng, kỳ 21h ngày hôm sau là kỳ chia giải. Giải Nhất nhận 1/3, các giải Nhì đến Năm mỗi giải nhận 1/6 giá trị Độc đắc. Giá trị vé ở kỳ này bằng phần chia sau thuế trên mỗi vé cộng ${money(d.lotto_fixed)} giải cố định, số vé bán lấy theo tỷ lệ của kỳ chia giải gần nhất, đã tính khả năng có người trúng Độc đắc và không chia giải. Kỳ thường luôn chấm Nghỉ.</p>
       <p><b>Sổ dự báo:</b> mỗi lượt chạy lưu lại số ước tính, nhận định và bộ số của các kỳ tới, rồi tự chấm khi có kết quả. Sổ này dùng để căn chỉnh công thức ước tính, không giúp dự đoán số trúng.</p>
       <p><b>Ước tính:</b> số vé bán suy từ số người trúng giải ba các kỳ gần đây, jackpot kỳ tới bằng mức hiện tại cộng bình quân 2 bước tăng gần nhất của chu kỳ đang chạy.</p>
       <p><b>Nguồn:</b> dãy số từ <a href="https://github.com/vietvudanh/vietlott-data">vietlott-data</a>, jackpot và số người trúng từ <a href="https://xosodaiphat.com/xs-mega-xo-so-mega-645.html">Xổ số Đại Phát</a>. Dữ liệu Lotto từ <a href="https://xskt.com.vn/xslotto-5-35">XSKT</a> và <a href="https://www.minhchinh.com/xo-so-dien-toan-lotto-535.html">Minh Chính</a>. Các nguồn được đối chiếu dãy số mỗi lần cập nhật. Danh sách kỳ chia giải cũ lấy từ báo chí nên có thể chưa đủ. Mega có dữ liệu từ kỳ ${t.mega.first_id}, jackpot lưu từ tháng 3/2026, Mega trước tháng 10/2026 làm tròn đến nghìn đồng.</p>`;
