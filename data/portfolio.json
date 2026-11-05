@@ -50,7 +50,19 @@
   "ev_pct": 33.4,
   "tickets": [],
   "baseline": [],
-  "status": "pending"
+  "status": "done",
+  "returned": 0,
+  "returned_baseline": 0,
+  "jackpot_hits": [],
+  "numbers": [
+   6,
+   20,
+   34,
+   41,
+   49,
+   52,
+   36
+  ]
  },
  {
   "game": "lotto",
@@ -241,6 +253,16 @@
   "date": "2026-11-06",
   "verdict": "Nghỉ",
   "ev_pct": 40.2,
+  "tickets": [],
+  "baseline": [],
+  "status": "pending"
+ },
+ {
+  "game": "power",
+  "id": 1421,
+  "date": "2026-11-07",
+  "verdict": "Nghỉ",
+  "ev_pct": 34.9,
   "tickets": [],
   "baseline": [],
   "status": "pending"
