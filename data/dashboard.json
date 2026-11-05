@@ -1,14 +1,14 @@
 {
- "generated_at": "2026-11-05T22:44+07:00",
- "today": "2026-11-05",
- "weekday": "Thứ 5",
+ "generated_at": "2026-11-06T05:48+07:00",
+ "today": "2026-11-06",
+ "weekday": "Thứ 6",
  "commentary": {
-  "date": "2026-11-05",
-  "headline": "Các kỳ tới đều chấm Nghỉ",
+  "date": "2026-11-06",
+  "auto": true,
+  "headline": "Các kỳ tới chưa đáng mua vé.",
   "paragraphs": [
-   "Giá trị vé các kỳ tới trên vé 10.000đ là Mega 6/45 2.814đ, Power 6/55 3.492đ và Lotto 5/35 3.009đ, đều dưới mức 45%. Nhận định sẽ đổi nếu giá trị giải Độc đắc tăng mạnh hoặc lượng vé bán ra giảm đáng kể so với ước tính."
-  ],
-  "status": "normal"
+   "Power 6/55 đang có giá trị vé cao nhất, khoảng 3.657đ trên vé 10.000đ."
+  ]
  },
  "warnings": [],
  "stale": [],
@@ -1340,7 +1340,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 20,
+  "forecasts": 23,
   "start": "2026-11-03",
   "games": {
    "mega": {
