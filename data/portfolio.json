@@ -255,7 +255,18 @@
   "ev_pct": 40.2,
   "tickets": [],
   "baseline": [],
-  "status": "pending"
+  "status": "done",
+  "returned": 0,
+  "returned_baseline": 0,
+  "jackpot_hits": [],
+  "numbers": [
+   1,
+   10,
+   37,
+   38,
+   39,
+   45
+  ]
  },
  {
   "game": "power",
@@ -263,6 +274,16 @@
   "date": "2026-11-07",
   "verdict": "Nghỉ",
   "ev_pct": 34.9,
+  "tickets": [],
+  "baseline": [],
+  "status": "pending"
+ },
+ {
+  "game": "mega",
+  "id": 1586,
+  "date": "2026-11-08",
+  "verdict": "Nghỉ",
+  "ev_pct": 27.9,
   "tickets": [],
   "baseline": [],
   "status": "pending"
