@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-08T23:14+07:00",
- "today": "2026-11-08",
- "weekday": "Chủ nhật",
+ "generated_at": "2026-11-09T04:20+07:00",
+ "today": "2026-11-09",
+ "weekday": "Thứ 2",
  "commentary": {
-  "date": "2026-11-08",
+  "date": "2026-11-09",
   "status": "normal",
   "headline": "Các kỳ tới đều chấm Nghỉ.",
   "paragraphs": [
@@ -1061,7 +1061,7 @@
  },
  "portfolio": {
   "start": "2026-11-02",
-  "week_used": 10,
+  "week_used": 0,
   "week_cap": 10,
   "spent": 100000,
   "returned": 10000,
@@ -1404,7 +1404,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 47,
+  "forecasts": 50,
   "start": "2026-11-03",
   "games": {
    "mega": {
