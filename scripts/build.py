@@ -13,7 +13,7 @@ import subprocess
 from datetime import date, datetime, timedelta, timezone
 from math import comb
 from pathlib import Path
-from statistics import mean
+from statistics import mean, median
 
 from scipy.stats import chi2, norm
 
@@ -467,7 +467,8 @@ def lotto_block(draws, store, warnings, today):
     cycle = rows[start:]
     rises = [b["jackpot"] - a["jackpot"] for a, b in zip(cycle, cycle[1:]) if b["jackpot"] > a["jackpot"]][-3:]
     step = mean(rises) if rises else 240e6
-    tickets = mean(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in [x for x in rows if x.get("winners")][-3:])
+    normal = [x for x in rows if x.get("winners") and x["jackpot"] <= LOTTO["trigger"] and x["id"] not in known]
+    tickets = median(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in normal[-5:])
     jackpot = last["jackpot"] if last["jackpot_winners"] == 0 and last["values"]["g2"] == LOTTO_BASE["g2"] else LOTTO["seed_jp"]
     armed_date = None
     if jackpot > LOTTO["trigger"]:
@@ -542,6 +543,41 @@ def due_game(days, now):
     while d.weekday() not in days:
         d -= timedelta(days=1)
     return d
+
+
+def vnd(x):
+    return f"{round(x):_}đ".replace("_", ".")
+
+
+def make_commentary(all_rows, lotto, stale, today):
+    """Nhận định viết bằng code theo mẫu cố định, chỉ dùng số đã tính, không phụ thuộc lượt Claude."""
+    rows = {r["game"]: r for r in all_rows}
+    if stale:
+        return {"date": today.isoformat(), "status": lotto["status"], "headline": "Đang chờ số liệu kỳ mới.",
+                "paragraphs": [f"Chưa có kết quả kỳ mới nhất của {', '.join(stale)}. Nhận định sẽ cập nhật khi có số liệu."]}
+    t = lotto["target"]
+    first = {
+        "rolldown": f"Lotto 5/35 kỳ {lotto['id']} quay lúc 21h hôm nay, vé dừng bán 20h30. Kỳ này chỉ chia giải nếu không có người trúng Độc đắc, giá trị vé ước tính {vnd(lotto['ev']['total'])} và phụ thuộc vào số vé bán.",
+        "armed": f"Độc đắc Lotto 5/35 đã vượt 12 tỷ. Nếu chưa có người trúng, kỳ {t['id']} lúc 21h ngày {date.fromisoformat(t['date']).strftime('%d/%m')} là kỳ chia giải.",
+        "near": f"Độc đắc Lotto 5/35 đang ở {lotto['current_jackpot'] / 1e9:.1f}".replace(".", ",") + " tỷ, gần mốc chia giải 12 tỷ.",
+    }.get(lotto["status"])
+    order = [g for g in ("mega", "power", "lotto") if g in rows]
+    values = ", ".join(f"{rows[g]['name']} kỳ {rows[g]['id']} {vnd(rows[g]['ev']['total'])}" for g in order)
+    play = [rows[g] for g in order if rows[g]["tickets"]]
+    if lotto["status"] == "rolldown":
+        headline = "Hôm nay có thể có kỳ chia giải Lotto 5/35."
+    elif play:
+        best = max(play, key=lambda r: r["ev"]["pct"])
+        headline = f"{best['name']} kỳ {best['id']} đáng cân nhắc."
+    elif lotto["status"] in ("armed", "near"):
+        headline = "Lotto 5/35 đang tiến gần kỳ chia giải."
+    else:
+        headline = "Các kỳ tới đều chấm Nghỉ."
+    tail = f"Giá trị vé 10.000đ: {values}."
+    if not play:
+        tail += f" Nhận định chuyển sang Chơi nhẹ khi giá trị vé đạt {LIGHT_PCT}% giá vé."
+    text = f"{first} {tail}" if first else tail
+    return {"date": today.isoformat(), "status": lotto["status"], "headline": headline, "paragraphs": [text]}
 
 
 def week_start(d):
@@ -634,9 +670,8 @@ def update_forecast_log(all_rows, all_draws, valid_rows, lotto, now):
     path = DATA / "forecast_log.json"
     log = json.loads(path.read_text()) if path.exists() else []
     run = now.strftime("%Y-%m-%d") + ("-sang" if now.hour < 14 else "-toi")
-    for e in log:
-        if e["actual"] is None:
-            e["actual"] = actual_result(e, all_draws, valid_rows, lotto)
+    for e in log:  # kết quả thật luôn tính lại từ dữ liệu, số dự báo đã ghi thì giữ nguyên
+        e["actual"] = actual_result(e, all_draws, valid_rows, lotto)
     upcoming = {(r["game"], r["id"]) for r in all_rows}
     log = [e for e in log if not (e["run"] == run and e["actual"] is None and (e["game"], e["id"]) in upcoming)]
     done = {(e["game"], e["id"]) for e in log if e["actual"] is not None}
@@ -667,8 +702,8 @@ def update_forecast_log(all_rows, all_draws, valid_rows, lotto, now):
         tick = [e["actual"]["tickets_error_pct"] for e in rows if e["actual"]["tickets_error_pct"] is not None]
         hits = [h for e in rows for h in e["actual"]["set_hits"]]
         summary["games"][game] = {
-            "scored": len(rows), "jackpot_error": round(mean(jack), 1) if jack else None,
-            "tickets_error": round(mean(tick), 1) if tick else None,
+            "scored": len(rows), "jackpot_error": round(median(jack), 1) if jack else None,
+            "tickets_error": round(median(tick), 1) if tick else None,
             "set_hits": round(mean(hits), 3) if hits else None, "set_hits_expected": round(k * k / n, 3),
             "sets": len(hits),
         }
@@ -771,27 +806,13 @@ def main():
         "jackpot": lotto["rows"][-1]["jackpot"], "jackpot_winners": lotto["rows"][-1]["jackpot_winners"],
     }
     commentary_file = DATA / "commentary.json"
-    commentary = json.loads(commentary_file.read_text()) if commentary_file.exists() else {}
     if lotto["rows"][-1]["id"] < due_lotto(now):
         stale.append(LOTTO["name"])
     for name in stale:
         if not any(w.startswith(name) for w in warnings):
             warnings.append(f"{name}: chưa có số liệu kỳ mới nhất, nhận định có thể chưa cập nhật.")
-    if commentary.get("date") == today.isoformat() and "status" not in commentary:
-        commentary["status"] = lotto["status"]
-        commentary_file.write_text(json.dumps(commentary, ensure_ascii=False, indent=1) + "\n")
-    if stale or commentary.get("date") != today.isoformat() or commentary.get("status") != lotto["status"]:
-        best = max(all_rows, key=lambda r: r["ev"]["pct"])
-        all_rest = all(r["tickets"] == 0 for r in all_rows)
-        commentary = {
-            "date": today.isoformat(), "auto": True,
-            "headline": "Đang chờ số liệu kỳ mới." if stale
-            else "Hôm nay có kỳ chia giải Lotto 5/35." if lotto["status"] == "rolldown"
-            else "Sắp có kỳ chia giải Lotto 5/35." if lotto["status"] in ("near", "armed")
-            else "Các kỳ tới chưa đáng mua vé." if all_rest else f"{best['name']} là kỳ đáng cân nhắc nhất.",
-            "paragraphs": ["Đang chờ số liệu kỳ mới, nhận định sẽ cập nhật ở lượt sau." if stale else
-                           f"{best['name']} đang có giá trị vé cao nhất, khoảng {best['ev']['total']:_}đ trên vé 10.000đ.".replace("_", ".")],
-        }
+    commentary = make_commentary(all_rows, lotto, stale, today)
+    commentary_file.write_text(json.dumps(commentary, ensure_ascii=False, indent=1) + "\n")
     out = {
         "generated_at": now.isoformat(timespec="minutes"), "today": today.isoformat(),
         "weekday": WEEKDAYS[today.weekday()], "commentary": commentary, "warnings": warnings, "stale": stale,

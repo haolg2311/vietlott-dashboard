@@ -1,13 +1,13 @@
 {
- "generated_at": "2026-11-08T14:52+07:00",
+ "generated_at": "2026-11-08T19:09+07:00",
  "today": "2026-11-08",
  "weekday": "Chủ nhật",
  "commentary": {
   "date": "2026-11-08",
-  "auto": true,
-  "headline": "Các kỳ tới chưa đáng mua vé.",
+  "status": "normal",
+  "headline": "Các kỳ tới đều chấm Nghỉ.",
   "paragraphs": [
-   "Lotto 5/35 đang có giá trị vé cao nhất, khoảng 3.381đ trên vé 10.000đ."
+   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1586 2.988đ, Power 6/55 kỳ 1422 3.326đ, Lotto 5/35 kỳ 996 3.386đ. Nhận định chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé."
   ]
  },
  "warnings": [],
@@ -22,13 +22,13 @@
    "weekday": "Chủ nhật",
    "jackpot": 7314000000.0,
    "jackpot2": 0,
-   "tickets_est": 205000.0,
+   "tickets_est": 183000.0,
    "ev": {
     "fixed": 1734,
-    "jackpot": 1647,
+    "jackpot": 1651,
     "jackpot2": 0,
-    "total": 3381,
-    "pct": 33.8
+    "total": 3386,
+    "pct": 33.9
    },
    "verdict": "Nghỉ",
    "tickets": 0,
@@ -176,7 +176,7 @@
    "extra": [
     39
    ],
-   "jackpot": 22636747050,
+   "jackpot": 45273494100,
    "jackpot_winners": 2
   },
   "lotto": {
@@ -549,7 +549,7 @@
     "date": "2026-10-15",
     "jackpot": 156701347950,
     "winners": 0,
-    "pct": 63.2
+    "pct": 66.9
    },
    {
     "id": 1412,
@@ -570,7 +570,7 @@
     "date": "2026-10-22",
     "jackpot": 188849262450,
     "winners": 0,
-    "pct": 72.6
+    "pct": 77.0
    },
    {
     "id": 1415,
@@ -617,9 +617,9 @@
    {
     "id": 1421,
     "date": "2026-11-07",
-    "jackpot": 22636747050,
+    "jackpot": 45273494100,
     "winners": 2,
-    "pct": 29.3
+    "pct": 36.2
    }
   ]
  },
@@ -1388,24 +1388,24 @@
   "games": {
    "mega": {
     "scored": 2,
-    "jackpot_error": 8.2,
-    "tickets_error": 1.4,
+    "jackpot_error": 1.1,
+    "tickets_error": 9.3,
     "set_hits": 0.5,
     "set_hits_expected": 0.8,
     "sets": 4
    },
    "power": {
     "scored": 3,
-    "jackpot_error": 34.0,
-    "tickets_error": 11.3,
+    "jackpot_error": 0.7,
+    "tickets_error": 13.8,
     "set_hits": 1,
     "set_hits_expected": 0.655,
     "sets": 6
    },
    "lotto": {
     "scored": 10,
-    "jackpot_error": 12.5,
-    "tickets_error": 186.6,
+    "jackpot_error": 1.6,
+    "tickets_error": 33.9,
     "set_hits": 0.571,
     "set_hits_expected": 0.714,
     "sets": 28

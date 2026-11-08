@@ -107,6 +107,17 @@ def merge(rows, found, floor):
     return [by_id[i] for i in sorted(by_id)], added
 
 
+def fix_split(rows, keys=(("jackpot", "jackpot_winners"), ("jackpot2", "jackpot2_winners"))):
+    """Nguồn ghi số tiền mỗi người khi có nhiều người trúng. Đổi về tổng giá trị giải."""
+    fixed = []
+    for a, b in zip(rows, rows[1:]):
+        for key, win in keys:
+            if (b.get(win) or 0) >= 2 and a.get(win) == 0 and a.get(key) and b.get(key) and b[key] < a[key]:
+                b[key] *= b[win]
+                fixed.append(b["id"])
+    return fixed
+
+
 def lotto_date(i):
     return (date(2025, 6, 29) + timedelta(days=(i - 1) // 2)).isoformat()
 
@@ -119,7 +130,7 @@ def main():
             found = parser(text_of(SOURCES[game]))
             floor = jackpots[game][-1]["id"]
             jackpots[game], added = merge(jackpots[game], found, floor)
-            report[game] = {"read": len(found), "added": added}
+            report[game] = {"read": len(found), "added": added, "split_fixed": fix_split(jackpots[game])}
         except Exception as e:  # nguồn lỗi thì giữ nguyên dữ liệu, trang tự hiện cảnh báo
             report[game] = {"error": str(e)[:120]}
         time.sleep(2)
@@ -139,6 +150,7 @@ def main():
     for i, r in found.items():
         r["date"] = lotto_date(i)
     store["rows"], added = merge(store["rows"], found, floor)
+    fix_split(store["rows"], (("jackpot", "jackpot_winners"),))
     (DATA / "lotto.json").write_text(json.dumps(store, ensure_ascii=False, indent=0) + "\n")
     report["lotto"] = {"read": len(found), "added": added, "errors": errors}
     print(json.dumps(report, ensure_ascii=False))
