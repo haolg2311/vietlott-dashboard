@@ -575,7 +575,7 @@ def make_commentary(all_rows, lotto, stale, today):
         headline = "Các kỳ tới đều chấm Nghỉ."
     tail = f"Giá trị vé 10.000đ: {values}."
     if not play:
-        tail += f" Nhận định chuyển sang Chơi nhẹ khi giá trị vé đạt {LIGHT_PCT}% giá vé."
+        tail += f" Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt {LIGHT_PCT}% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
     text = f"{first} {tail}" if first else tail
     return {"date": today.isoformat(), "status": lotto["status"], "headline": headline, "paragraphs": [text]}
 

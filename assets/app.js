@@ -116,13 +116,36 @@
     drawChart();
   }
 
+  // Kỳ đã quay quá 3 giờ mà trang chưa có kết quả thì báo đang chờ số liệu.
+  function lateGames(d) {
+    const vn = new Date(Date.now() + 7 * 36e5);
+    const day0 = Date.UTC(vn.getUTCFullYear(), vn.getUTCMonth(), vn.getUTCDate());
+    const iso = (t) => new Date(t).toISOString().slice(0, 10);
+    const h = vn.getUTCHours();
+    const out = [];
+    const sinceStart = Math.round((day0 - Date.UTC(2025, 5, 29)) / 864e5);
+    const lottoDue = h >= 16 ? sinceStart * 2 + 1 : sinceStart * 2;
+    if (d.latest.lotto && d.latest.lotto.id < lottoDue) out.push('Lotto 5/35');
+    for (const [g, name, days] of [['mega', 'Mega 6/45', [3, 5, 0]], ['power', 'Power 6/55', [2, 4, 6]]]) {
+      let t = day0 - (h >= 21 ? 0 : 864e5);
+      while (!days.includes(new Date(t).getUTCDay())) t -= 864e5;
+      if (d.latest[g] && d.latest[g].date < iso(t)) out.push(name);
+    }
+    return out;
+  }
+
   function render(d) {
     state.data = d;
     const stale = (Date.now() - new Date(d.generated_at).getTime()) / 36e5 > 36;
     $('stamp').textContent = `Cập nhật ${d.generated_at.slice(11, 16)} ${dm(d.today)}`;
-    $('headline').textContent = d.commentary.headline;
-    $('commentary').innerHTML = d.commentary.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('');
+    const late = lateGames(d);
+    const c = late.length && !(d.stale || []).length
+      ? { headline: 'Đang chờ số liệu kỳ mới.', paragraphs: [`Chưa có kết quả kỳ mới nhất của ${late.join(', ')}. Các số dưới đây tính theo kỳ trước, trang sẽ tự cập nhật khi có số liệu.`] }
+      : d.commentary;
+    $('headline').textContent = c.headline;
+    $('commentary').innerHTML = c.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('');
     const warn = [...d.warnings];
+    late.forEach((g) => { if (!warn.some((w) => w.startsWith(g))) warn.unshift(`${g}: chưa có kết quả kỳ mới nhất, đang chờ số liệu.`); });
     if (stale) warn.unshift(`Trang chưa được cập nhật từ ${dmy(d.today)}, số liệu có thể đã cũ.`);
     const lotto = d.next.find((n) => n.game === 'lotto');
     if (lotto.status === 'rolldown') warn.unshift(`Hôm nay là kỳ chia giải Lotto 5/35 nếu không có người trúng Độc đắc, kỳ ${lotto.id} lúc 21h. Vé dừng bán lúc 20h30.`);
