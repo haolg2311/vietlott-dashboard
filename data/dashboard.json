@@ -1,13 +1,13 @@
 {
- "generated_at": "2026-11-17T21:49+07:00",
- "today": "2026-11-17",
- "weekday": "Thứ 3",
+ "generated_at": "2026-11-18T06:05+07:00",
+ "today": "2026-11-18",
+ "weekday": "Thứ 4",
  "commentary": {
-  "date": "2026-11-17",
+  "date": "2026-11-18",
   "status": "normal",
   "headline": "Các kỳ tới đều chấm Nghỉ.",
   "paragraphs": [
-   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1590 3.003đ, Power 6/55 kỳ 1426 3.240đ, Lotto 5/35 kỳ 1015 3.158đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
+   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1590 3.003đ, Power 6/55 kỳ 1426 3.278đ, Lotto 5/35 kỳ 1015 3.158đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
   ]
  },
  "warnings": [],
@@ -112,15 +112,15 @@
    "id": 1426,
    "date": "2026-11-19",
    "weekday": "Thứ 5",
-   "jackpot": 40119000000,
-   "jackpot2": 4252000000.0,
-   "tickets_est": 1190000.0,
+   "jackpot": 43899000000,
+   "jackpot2": 3795000000.0,
+   "tickets_est": 1210000.0,
    "ev": {
     "fixed": 1317,
-    "jackpot": 1220,
-    "jackpot2": 703,
-    "total": 3240,
-    "pct": 32.4
+    "jackpot": 1335,
+    "jackpot2": 626,
+    "total": 3278,
+    "pct": 32.8
    },
    "verdict": "Nghỉ",
    "tickets": 0,
@@ -176,7 +176,7 @@
    "extra": [
     34
    ],
-   "jackpot": 37641706500,
+   "jackpot": 40971513000,
    "jackpot_winners": 0
   },
   "lotto": {
@@ -412,13 +412,6 @@
   ],
   "power": [
    {
-    "id": 1395,
-    "date": "2026-09-08",
-    "jackpot": 58493952750,
-    "winners": 0,
-    "pct": 37.5
-   },
-   {
     "id": 1396,
     "date": "2026-09-10",
     "jackpot": 61515559200,
@@ -620,6 +613,13 @@
     "jackpot": 37641706500,
     "winners": 0,
     "pct": 30.1
+   },
+   {
+    "id": 1425,
+    "date": "2026-11-17",
+    "jackpot": 40971513000,
+    "winners": 0,
+    "pct": 31.6
    }
   ]
  },
@@ -692,9 +692,9 @@
    "100": 82500000000.0
   },
   "power": {
-   "45": 81500000000.0,
-   "55": 114400000000.0,
-   "100": 262300000000.0
+   "45": 84100000000.0,
+   "55": 117000000000.0,
+   "100": 265000000000.0
   }
  },
  "tests": {
@@ -1469,7 +1469,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 119,
+  "forecasts": 122,
   "start": "2026-11-03",
   "games": {
    "mega": {
@@ -1483,7 +1483,7 @@
    "power": {
     "scored": 7,
     "jackpot_error": 0.8,
-    "tickets_error": 14.1,
+    "tickets_error": 13.8,
     "set_hits": 1.143,
     "set_hits_expected": 0.655,
     "sets": 14
