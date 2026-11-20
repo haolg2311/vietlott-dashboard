@@ -34,7 +34,7 @@
   function lottoCard(n, last) {
     const t = n.target;
     const note = {
-      rolldown: `Kỳ chia giải nếu không có người trúng Độc đắc, khả năng có người trúng khoảng ${t.ev.hit_pct}%. Vé dừng bán lúc 20h30`,
+      rolldown: `Chỉ chia giải nếu không có người trúng Độc đắc, khả năng có người trúng khoảng ${t.hit_low}–${t.hit_high}%. Vé dừng bán lúc 20h30`,
       armed: `Đã vượt 12 tỷ. Kỳ chia giải dự kiến là kỳ ${t.id}, 21h ${day(t.date)} ${dm(t.date)}`,
       near: `Sắp vượt 12 tỷ, còn khoảng ${n.draws_to} kỳ nếu chưa có người trúng`,
       normal: `Còn khoảng ${n.draws_to} kỳ nữa vượt 12 tỷ nếu chưa có người trúng`,
@@ -47,7 +47,9 @@
       <div><span>Giá trị vé 10.000đ</span><b>${money(n.ev.total)}</b></div></div>
       <div class="bar" role="img" aria-label="Độc đắc so với mốc chia giải 12 tỷ"><i style="width:${Math.min(100, n.current_jackpot / n.trigger * 100)}%"></i></div>
       <p class="bar-note">${esc(note)}</p>
-      ${n.status === 'rolldown' ? '' : `<p class="bar-note">Ước tính ở kỳ chia giải: vé 10.000đ có giá trị khoảng ${money(t.ev.total)}</p>`}
+      ${n.status === 'rolldown'
+        ? `<p class="bar-note">Độc đắc lúc quay ước tính ${billions(t.jackpot_low)}–${billions(t.jackpot_high)}. Giá trị vé trong khoảng ${money(t.ev_low)}–${money(t.ev_high)}. Mua 10 vé, khả năng thu về từ 100.000đ trở lên khoảng ${pct(t.back10, 0)}.</p>`
+        : `<p class="bar-note">Ước tính ở kỳ chia giải: giá trị vé khoảng ${money(t.ev_low)}–${money(t.ev_high)}, khả năng có người trúng Độc đắc và không chia giải khoảng ${t.hit_low}–${t.hit_high}%.</p>`}
       <div class="picks"><h3>${esc(title)}</h3>${n.sets.map((s) => balls(s.slice(0, 5), s.slice(5))).join('')}</div>
       ${lastBlock(last)}</article>`;
   }
@@ -70,7 +72,7 @@
 
   function drawChart() {
     const lotto = state.game === 'lotto', rules = state.data.rules;
-    const el = $('chart'), rows = lotto ? state.data.rolldowns.map((r) => ({ ...r, winners: 0 })) : state.data.ev_history[state.game];
+    const el = $('chart'), rows = lotto ? state.data.rolldowns : state.data.ev_history[state.game];
     const w = el.clientWidth - 24, h = 200, m = { t: 8, r: 8, b: 24, l: 38 };
     const iw = w - m.l - m.r, ih = h - m.t - m.b;
     const top = Math.max(100, Math.ceil(Math.max(...rows.map((r) => r.pct)) / 20) * 20);
@@ -82,10 +84,10 @@
     const dots = rows.map((r, i) => `<circle cx="${x(i)}" cy="${y(r.pct)}" r="${r.winners ? 5 : 3}" fill="${r.winners ? 'var(--gold)' : 'var(--red)'}" stroke="var(--red)" stroke-width="1.5"/>`).join('');
     const hits = rows.map((r, i) => `<rect data-i="${i}" x="${x(i) - iw / rows.length / 2}" y="${m.t}" width="${iw / rows.length}" height="${ih}" fill="transparent"/>`).join('');
     const ticks = [0, rows.length - 1].map((i) => `<text x="${x(i)}" y="${h - 6}" text-anchor="${i ? 'end' : 'start'}">Kỳ ${rows[i].id}</text>`).join('');
-    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" height="${h}" role="img" aria-label="Giá trị vé so với giá mua theo từng kỳ">${grid}${zone}<path d="${line}" fill="none" stroke="var(--red)" stroke-width="2"/>${dots}${ticks}${hits}</svg><p class="bar-note">${lotto ? 'Đường nét đứt là mức hòa vốn 100%.' : 'Vùng hồng là mức chơi nhẹ, chấm vàng là kỳ có người trúng jackpot.'}</p>`;
+    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" height="${h}" role="img" aria-label="Giá trị vé so với giá mua theo từng kỳ">${grid}${zone}<path d="${line}" fill="none" stroke="var(--red)" stroke-width="2"/>${dots}${ticks}${hits}</svg><p class="bar-note">${lotto ? 'Giá trị vé tính lại theo vé bán thật, đã tính khả năng có người trúng Độc đắc. Đường nét đứt là mức hòa vốn 100%, chấm vàng là kỳ có người trúng Độc đắc nên không chia giải.' : 'Vùng hồng là mức chơi nhẹ, chấm vàng là kỳ có người trúng jackpot.'}</p>`;
     el.querySelectorAll('rect[data-i]').forEach((node) => {
       const r = rows[+node.dataset.i];
-      const on = (e) => showTip(e, `Kỳ ${r.id}, ${dmy(r.date)}<br>Jackpot ${billions(r.jackpot)}${r.tickets ? `<br>Vé bán khoảng ${(r.tickets / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 })} triệu` : ''}<br>Giá trị vé ${pct(r.pct)}`);
+      const on = (e) => showTip(e, `Kỳ ${r.id}, ${dmy(r.date)}<br>Jackpot ${billions(r.jackpot)}${r.tickets ? `<br>Vé bán khoảng ${(r.tickets / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 })} triệu` : ''}<br>Giá trị vé ${pct(r.pct)}${lotto && r.winners ? '<br>Có người trúng Độc đắc, không chia giải' : ''}`);
       node.addEventListener('pointermove', on);
       node.addEventListener('pointerdown', on);
       node.addEventListener('pointerleave', hideTip);
@@ -104,14 +106,14 @@
     }).join('');
     $('more').hidden = state.shown >= rows.length;
     const lotto = state.game === 'lotto';
-    const b = d.breakeven[state.game] || {}, lb = d.lotto_breakeven;
+    const b = d.breakeven[state.game] || {}, lt = d.next.find((n) => n.game === 'lotto').target;
     const million = (n) => (n / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' triệu vé';
     $('value-title').textContent = lotto ? 'Các kỳ chia giải đã ghi nhận' : 'Giá trị vé theo kỳ';
     $('value-note').textContent = lotto
-      ? 'Ở kỳ chia giải, Độc đắc được trả hết cho các vé trúng, nên giá trị vé phụ thuộc vào số vé bán. Độc đắc còn tăng theo số vé bán, nên mức hòa vốn tính theo Độc đắc lúc quay. Nếu có người trúng Độc đắc thì kỳ đó không chia giải.'
+      ? 'Ở kỳ chia giải, nếu không có người trúng Độc đắc thì toàn bộ Độc đắc được chia cho giải Nhất đến giải Năm. Người mua dồn vào kỳ này nên Độc đắc tăng mạnh, nhưng khả năng có người trúng Độc đắc cũng lên khoảng một nửa. Giá trị vé gần hòa vốn chỉ đúng khi tính bình quân rất nhiều kỳ, mỗi kỳ người mua 10 vé vẫn thường mất tiền.'
       : '';
     $('marks').innerHTML = lotto
-      ? `<div><dt>Hòa vốn, Độc đắc 13 tỷ</dt><dd>${million(lb['13'])}</dd></div><div><dt>Hòa vốn, Độc đắc 20 tỷ</dt><dd>${million(lb['20'])}</dd></div><div><dt>Hòa vốn, Độc đắc 30 tỷ</dt><dd>${million(lb['30'])}</dd></div>`
+      ? `<div><dt>Vé bán kỳ chia giải</dt><dd>${(lt.tickets_low / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 1 })}–${(lt.tickets_high / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu</dd></div><div><dt>Mỗi vé cộng Độc đắc</dt><dd>≈ ${money(lt.per_ticket)}</dd></div><div><dt>10 vé thu từ 100.000đ</dt><dd>≈ ${pct(lt.back10, 0)}</dd></div>`
       : `<div><dt>Chơi nhẹ từ</dt><dd>${billions(b['45'])}</dd></div><div><dt>Chơi từ</dt><dd>${billions(b['55'])}</dd></div><div><dt>Hòa vốn từ</dt><dd>${billions(b['100'])}</dd></div>`;
     drawChart();
   }
@@ -179,6 +181,16 @@
       ${acRow('Sai số vé bán', (x) => off(x.tickets_error))}
       ${acRow('Số trùng bộ số, thực tế', (x) => (x.set_hits === null ? 'Chưa có' : num(x.set_hits)))}
       ${acRow('Số trùng kỳ vọng', (x) => num(x.set_hits_expected))}`;
+    const rc = ac.rolldowns || [];
+    const bn = (v) => (v ? billions(v) : 'Chưa có');
+    const mn = (v) => (v ? (v / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' triệu' : 'Chưa có');
+    $('roll-title').hidden = !rc.length;
+    $('roll-note').hidden = !rc.length;
+    $('roll-checks').innerHTML = rc.slice().reverse().map((r) => `<li><div class="head"><b>Kỳ ${r.id}, ${dmy(r.date)}${r.verdict ? `, chấm ${esc(r.verdict)}` : ''}</b><span>${r.rolled ? 'Có chia giải' : 'Có người trúng Độc đắc, không chia giải'}</span></div>
+      <dl><dt class="cols"></dt><dd class="cols">Dự báo</dd><dd class="cols">Thực tế</dd>
+      <dt>Độc đắc</dt><dd>${bn(r.jackpot_est)}</dd><dd>${bn(r.jackpot)}</dd>
+      <dt>Vé bán</dt><dd>${mn(r.tickets_est)}</dd><dd>${mn(r.tickets)}</dd>
+      <dt>Giá trị vé</dt><dd>${r.ev_low ? `${money(r.ev_low)}–${money(r.ev_high)}` : money(r.ev_est)}</dd><dd>${money(r.ev)}</dd></dl></li>`).join('');
     const t = d.tests, f = d.filter_check;
     const row = (label, get) => `<div><span>${label}</span>${['mega', 'power', 'lotto'].map((g) => `<span>${num(get(t[g]))}</span>`).join('')}</div>`;
     $('tests').innerHTML = `<p><b>Chưa thấy dấu hiệu đoán được.</b> Số liệu dưới đây dựa trên ${fmt(t.mega.draws)} kỳ Mega, ${fmt(t.power.draws)} kỳ Power và ${fmt(t.lotto.draws)} kỳ Lotto.</p>
@@ -191,7 +203,7 @@
       <p>Bộ số gợi ý không làm tăng khả năng trúng: tỷ lệ vé trúng từ giải ba trở lên là ${pct(f.filter_win_pct, 2)}, so với ${pct(f.random_win_pct, 2)} khi chọn ngẫu nhiên. Việc tránh số đông người chọn mới là giả thuyết, dữ liệu hiện chưa đủ chứng minh.</p>`;
     $('method').innerHTML = `<p><b>Giá trị vé</b> là số tiền bình quân một vé thu về: xác suất từng giải nhân tiền thực nhận, đã trừ thuế 10% phần giải vượt 20 triệu và rủi ro chia giải.</p>
       <p><b>Nhận định:</b> dưới ${d.rules.light_pct}% nghỉ, từ ${d.rules.light_pct}% chơi nhẹ ${d.rules.light_tickets} vé, từ ${d.rules.play_pct}% chơi ${d.rules.play_tickets} vé, tối đa ${d.rules.week_tickets} vé mỗi tuần. Đây là ngưỡng do trang đặt ra. Mốc hòa vốn là gần đúng vì vé bán thường tăng khi jackpot cao.</p>
-      <p><b>Lotto 5/35:</b> khi Độc đắc vượt 12 tỷ mà chưa có người trúng, kỳ 21h ngày hôm sau là kỳ chia giải. Giải Nhất nhận 1/3, các giải Nhì đến Năm mỗi giải nhận 1/6 giá trị Độc đắc. Giá trị vé ở kỳ này bằng phần chia sau thuế trên mỗi vé cộng ${money(d.lotto_fixed)} giải cố định, số vé bán lấy theo tỷ lệ của kỳ chia giải gần nhất, đã tính khả năng có người trúng Độc đắc và không chia giải. Kỳ thường luôn chấm Nghỉ.</p>
+      <p><b>Lotto 5/35:</b> khi Độc đắc vượt 12 tỷ mà chưa có người trúng, kỳ 21h ngày hôm sau là kỳ chia giải. Giải Nhất nhận 1/3, các giải Nhì đến Năm mỗi giải nhận 1/6 giá trị Độc đắc. Ước tính kỳ chia giải dựa trên 3 kỳ chia giải gần nhất (kể cả kỳ có người trúng Độc đắc): số vé bán thấp nhất, giữa và cao nhất, mỗi vé cộng thêm vào Độc đắc theo mức bình quân thực tế. Giá trị vé bằng phần chia sau thuế trên mỗi vé cộng ${money(d.lotto_fixed)} giải cố định, nhân khả năng không có người trúng Độc đắc. Khả năng 10 vé thu về từ 100.000đ được tính theo phân phối giải của từng vé. Kỳ chia giải chấm Chơi khi cả mức thấp của khoảng từ 100% trở lên, chấm Chơi nhẹ khi mức giữa từ 100%, còn lại Nghỉ. Kỳ thường luôn chấm Nghỉ.</p>
       <p><b>Nhận định:</b> chương trình tự viết theo mẫu cố định, chỉ dùng các số đã tính trên trang, cập nhật mỗi lần có số liệu mới.</p>
       <p><b>Sổ dự báo:</b> mỗi lượt chạy lưu lại số ước tính, nhận định và bộ số của các kỳ tới, rồi tự chấm khi có kết quả. Sổ này dùng để căn chỉnh công thức ước tính, không giúp dự đoán số trúng.</p>
       <p><b>Ước tính:</b> số vé bán suy từ số người trúng giải ba các kỳ gần đây, jackpot kỳ tới bằng mức hiện tại cộng bình quân 2 bước tăng gần nhất của chu kỳ đang chạy.</p>
