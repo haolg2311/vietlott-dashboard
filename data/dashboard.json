@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-20T05:45+07:00",
+ "generated_at": "2026-11-20T11:09+07:00",
  "today": "2026-11-20",
  "weekday": "Thứ 6",
  "commentary": {
@@ -58,15 +58,33 @@
     "id": 1050,
     "date": "2026-12-05",
     "weekday": "Thứ 7",
-    "jackpot": 12350000000.0,
-    "tickets": 1370000.0,
+    "jackpot": 21940000000.0,
+    "tickets": 2880000.0,
     "ev": {
-     "share": 8468,
+     "share": 7054,
      "fixed": 1734,
-     "total": 10202,
-     "pct": 102.0,
-     "hit_pct": 30
-    }
+     "total": 8788,
+     "pct": 87.9,
+     "hit_pct": 52
+    },
+    "jackpot_low": 21480000000.0,
+    "jackpot_high": 23440000000.0,
+    "tickets_low": 2750000.0,
+    "tickets_high": 3330000,
+    "ev_low": 8246,
+    "ev_high": 8988,
+    "pct_low": 82.5,
+    "pct_high": 89.9,
+    "hit_low": 51,
+    "hit_high": 57,
+    "back10": 7.0,
+    "pre": 12186000000.0,
+    "per_ticket": 3380,
+    "basis": [
+     874,
+     988,
+     1004
+    ]
    }
   },
   {
@@ -630,8 +648,8 @@
    "jackpot": 16000000000,
    "tickets": 850000,
    "basis": "Suy từ tiền thưởng báo đăng, kém chắc",
-   "value": 19677,
-   "pct": 196.8
+   "winners": 0,
+   "pct": 194.8
   },
   {
    "id": 54,
@@ -639,8 +657,8 @@
    "jackpot": 19639152000,
    "tickets": 1371000,
    "basis": "Suy từ 16.836 giải Năm",
-   "value": 15404,
-   "pct": 154.0
+   "winners": 0,
+   "pct": 151.7
   },
   {
    "id": 492,
@@ -648,8 +666,8 @@
    "jackpot": 24000000000,
    "tickets": 2089000,
    "basis": "Suy từ 25.653 giải Năm",
-   "value": 12709,
-   "pct": 127.1
+   "winners": 0,
+   "pct": 124.5
   },
   {
    "id": 584,
@@ -657,8 +675,8 @@
    "jackpot": 22000000000,
    "tickets": 1640000,
    "basis": "Suy từ 63 giải Nhì, kém chắc",
-   "value": 14539,
-   "pct": 145.4
+   "winners": 0,
+   "pct": 142.9
   },
   {
    "id": 874,
@@ -666,8 +684,59 @@
    "jackpot": 30000000000,
    "tickets": 3330000,
    "basis": "Suy từ 273.491 giải Khuyến khích",
-   "value": 10354,
-   "pct": 103.5
+   "winners": 0,
+   "pct": 100.6
+  },
+  {
+   "id": 988,
+   "date": "2026-11-04",
+   "jackpot": 23069546500,
+   "tickets": 2885000.0,
+   "winners": 1,
+   "pct": 91.5
+  },
+  {
+   "id": 1004,
+   "date": "2026-11-12",
+   "jackpot": 25939778000,
+   "tickets": 2750000.0,
+   "winners": 1,
+   "pct": 104.9
+  }
+ ],
+ "rolldown_days": [
+  {
+   "id": 874,
+   "date": "2026-09-08",
+   "pre": null,
+   "jackpot": 30000000000,
+   "tickets": 3330000,
+   "per_ticket": null,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 100.6
+  },
+  {
+   "id": 988,
+   "date": "2026-11-04",
+   "pre": 13766218000,
+   "jackpot": 23069546500,
+   "tickets": 2885000.0,
+   "per_ticket": 3224,
+   "rolled": false,
+   "jackpot_winners": 1,
+   "value_pct": 91.5
+  },
+  {
+   "id": 1004,
+   "date": "2026-11-12",
+   "pre": 16214372000,
+   "jackpot": 25939778000,
+   "tickets": 2750000.0,
+   "per_ticket": 3536,
+   "rolled": false,
+   "jackpot_winners": 1,
+   "value_pct": 104.9
   }
  ],
  "lotto_fixed": 1734,
@@ -1497,7 +1566,36 @@
     "sets": 82
    }
   },
-  "rolldowns": []
+  "rolldowns": [
+   {
+    "id": 988,
+    "date": "2026-11-04",
+    "jackpot_est": 15070000000.0,
+    "jackpot": 23069546500,
+    "tickets_est": 1670000.0,
+    "tickets": 2885000.0,
+    "ev_est": 10354,
+    "ev_low": null,
+    "ev_high": null,
+    "ev": 9150,
+    "rolled": false,
+    "verdict": "Chơi"
+   },
+   {
+    "id": 1004,
+    "date": "2026-11-12",
+    "jackpot_est": 18000000000.0,
+    "jackpot": 25939778000,
+    "tickets_est": 2000000.0,
+    "tickets": 2750000.0,
+    "ev_est": 10149,
+    "ev_low": null,
+    "ev_high": null,
+    "ev": 10490,
+    "rolled": false,
+    "verdict": "Chơi"
+   }
+  ]
  },
  "filter_check": {
   "tickets": 112680,

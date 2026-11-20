@@ -367,6 +367,95 @@ def rolldown_ahead(jackpot, tickets):
             "hit_pct": round((1 - miss) * 100)}
 
 
+def tier_values(jackpot, tickets, rolled):
+    """Tiền thực nhận một vé ở từng hạng giải của kỳ chia giải."""
+    out = {}
+    for tier in ("g1", "g2", "g3", "g4", "g5"):
+        extra = jackpot * LOTTO_SHARE[tier] / max(tickets * LOTTO_ODDS[tier], 1) if rolled else 0
+        out[tier] = net(LOTTO_BASE[tier] + extra)
+    out["kk"] = LOTTO_BASE["kk"]
+    return out
+
+
+def chance_back(jackpot, tickets, count=10):
+    """Xác suất count vé ở kỳ chia giải thu về ít nhất bằng tiền mua, tính đúng theo phân phối giải của từng vé."""
+    goal = count * TICKET // 1000
+    miss = math.exp(-tickets * LOTTO_ODDS["jp"])
+    total = 0.0
+    for rolled, weight in ((True, miss), (False, 1 - miss)):
+        values = tier_values(jackpot, tickets, rolled)
+        one = {}
+        rest = 1.0 - LOTTO_ODDS["jp"]
+        for tier, value in values.items():
+            k = min(goal, int(value // 1000))
+            one[k] = one.get(k, 0) + LOTTO_ODDS[tier]
+            rest -= LOTTO_ODDS[tier]
+        one[goal] = one.get(goal, 0) + LOTTO_ODDS["jp"]
+        one[0] = one.get(0, 0) + rest
+        dist = {0: 1.0}
+        for _ in range(count):
+            nxt = {}
+            for a, pa in dist.items():
+                for b, pb in one.items():
+                    k = min(goal, a + b)
+                    nxt[k] = nxt.get(k, 0) + pa * pb
+            dist = nxt
+        total += weight * dist.get(goal, 0)
+    return total
+
+
+def rolldown_days(rows, store):
+    """Các kỳ đáng lẽ chia giải (Độc đắc đã vượt 12 tỷ từ hôm trước), kể cả kỳ có người trúng Độc đắc nên không chia."""
+    by_id = {r["id"]: r for r in rows}
+    out = {}
+    for i, a in enumerate(rows):
+        before = rows[i - 1] if i else None
+        first = a["jackpot"] > LOTTO["trigger"] and a["jackpot_winners"] == 0 and (
+            before is None or before["jackpot"] <= LOTTO["trigger"] or before["jackpot_winners"] > 0)
+        if not first:
+            continue
+        rid = ((date.fromisoformat(a["date"]) + timedelta(days=1)) - date(2025, 6, 29)).days * 2 + 2
+        r, pre = by_id.get(rid), by_id.get(rid - 1)
+        if r is None or not r.get("winners") or pre is None:
+            continue
+        w = r["winners"]
+        tickets = mean([w["kk"] / LOTTO_ODDS["kk"], w["g5"] / LOTTO_ODDS["g5"], w["g4"] / LOTTO_ODDS["g4"]])
+        out[rid] = {"id": rid, "date": r["date"], "pre": pre["jackpot"], "jackpot": r["jackpot"], "tickets": round(tickets, -3),
+                    "per_ticket": round((r["jackpot"] - pre["jackpot"]) / tickets), "rolled": r["jackpot_winners"] == 0,
+                    "jackpot_winners": r["jackpot_winners"],
+                    "value_pct": rolldown_ahead(r["jackpot"], tickets)["pct"]}
+    for x in store["rolldowns"]:
+        if x["id"] not in out and x["id"] > 600:
+            out[x["id"]] = {"id": x["id"], "date": x["date"], "pre": None, "jackpot": x["jackpot"], "tickets": x["tickets"],
+                            "per_ticket": None, "rolled": True, "jackpot_winners": 0,
+                            "value_pct": rolldown_ahead(x["jackpot"], x["tickets"])["pct"]}
+    return [out[k] for k in sorted(out)]
+
+
+def rolldown_forecast(pre, days):
+    """Ước tính kỳ chia giải từ 3 kỳ chia giải gần nhất: vé bán thấp, giữa, cao và phần mỗi vé cộng vào Độc đắc."""
+    recent = days[-3:]
+    sold = sorted(x["tickets"] for x in recent) or [2.8e6]
+    adds = [x["per_ticket"] for x in recent if x["per_ticket"]]
+    add = mean(adds) if adds else 3400
+    cases = {}
+    for name, n in (("low", sold[0]), ("mid", median(sold)), ("high", sold[-1])):
+        j = pre + add * n
+        cases[name] = {"tickets": n, "jackpot": j, "ev": rolldown_ahead(j, n)}
+    evs = sorted(c["ev"]["pct"] for c in cases.values())
+    mid = cases["mid"]
+    return {
+        "jackpot": round(mid["jackpot"], -7), "tickets": round(mid["tickets"], -4), "ev": mid["ev"],
+        "jackpot_low": round(min(c["jackpot"] for c in cases.values()), -7), "jackpot_high": round(max(c["jackpot"] for c in cases.values()), -7),
+        "tickets_low": round(sold[0], -4), "tickets_high": round(sold[-1], -4),
+        "ev_low": round(min(c["ev"]["total"] for c in cases.values())), "ev_high": round(max(c["ev"]["total"] for c in cases.values())),
+        "pct_low": evs[0], "pct_high": evs[-1],
+        "hit_low": round((1 - math.exp(-sold[0] * LOTTO_ODDS["jp"])) * 100), "hit_high": round((1 - math.exp(-sold[-1] * LOTTO_ODDS["jp"])) * 100),
+        "back10": round(chance_back(mid["jackpot"], mid["tickets"]) * 100, 1),
+        "pre": round(pre, -6), "per_ticket": round(add), "basis": [x["id"] for x in recent],
+    }
+
+
 def draw_slot(draw_id):
     """Mỗi ngày có 2 kỳ: kỳ số lẻ quay lúc 13h, kỳ số chẵn quay lúc 21h."""
     return "13h" if draw_id % 2 else "21h"
@@ -499,10 +588,9 @@ def lotto_block(draws, store, warnings, today):
         d_, s_ = step_draw(d_, s_)
         gap += 1
     target_id = next_id + gap
-    est_jackpot = jackpot + step * (gap + 1)
-    ratio = store["rolldowns"][-1]["tickets"] / store["rolldowns"][-1]["jackpot"]
-    est_tickets = est_jackpot * ratio
-    roll = rolldown_ahead(est_jackpot, est_tickets)
+    days_seen = rolldown_days(rows, store)
+    target = rolldown_forecast(jackpot + step * gap, days_seen)
+    roll = target["ev"]
     is_rolldown = armed_date is not None and (next_day, next_slot) == (armed_date, "21h")
     status = "rolldown" if is_rolldown else "armed" if armed_date else "near" if draws_to <= LOTTO["near_draws"] else "normal"
 
@@ -511,23 +599,26 @@ def lotto_block(draws, store, warnings, today):
     ev = {"fixed": round(fixed), "jackpot": round(jp), "jackpot2": 0, "total": round(fixed + jp), "pct": round((fixed + jp) / TICKET * 100, 1)}
     if is_rolldown:
         ev = {"fixed": roll["fixed"], "jackpot": roll["share"], "jackpot2": 0, "total": roll["total"], "pct": roll["pct"]}
-    if is_rolldown and roll["pct"] >= 100:
+    if is_rolldown and target["pct_low"] >= 100:
         label, count = "Chơi", WEEK_TICKETS
-    elif is_rolldown:
-        label, count = verdict(roll["pct"])
+    elif is_rolldown and target["pct_high"] >= 100 and roll["pct"] >= 100:
+        label, count = "Chơi nhẹ", LIGHT_TICKETS
     else:
         label, count = "Nghỉ", 0
     rng = seeded("set", "lotto", next_id)
     sets = [pick_lotto(rng, latest["main"]) for _ in range(max(count, LIGHT_TICKETS))]
-    book = [dict(x, value=rolldown_ev(x["jackpot"], x["tickets"])["total"], pct=rolldown_ev(x["jackpot"], x["tickets"])["pct"]) for x in store["rolldowns"]]
+    book = {x["id"]: dict(x, winners=0, pct=rolldown_ahead(x["jackpot"], x["tickets"])["pct"]) for x in store["rolldowns"]}
+    for x in days_seen:
+        book.setdefault(x["id"], {"id": x["id"], "date": x["date"], "jackpot": x["jackpot"], "tickets": x["tickets"],
+                                  "winners": x["jackpot_winners"], "pct": x["value_pct"]})
+    book = [book[k] for k in sorted(book)]
     return {
         "game": "lotto", "name": LOTTO["name"], "id": next_id, "date": next_day.isoformat(), "slot": next_slot,
-        "weekday": WEEKDAYS[next_day.weekday()], "jackpot": round(jackpot + step, -6), "jackpot2": 0,
-        "tickets_est": round(tickets, -3), "ev": ev, "verdict": label, "tickets": count, "sets": sets,
+        "weekday": WEEKDAYS[next_day.weekday()], "jackpot": target["jackpot"] if is_rolldown else round(jackpot + step, -6), "jackpot2": 0,
+        "tickets_est": target["tickets"] if is_rolldown else round(tickets, -3), "ev": ev, "verdict": label, "tickets": count, "sets": sets,
         "status": status, "current_jackpot": jackpot, "trigger": LOTTO["trigger"], "draws_to": draws_to,
-        "target": {"id": target_id, "date": target_day.isoformat(), "weekday": WEEKDAYS[target_day.weekday()],
-                   "jackpot": round(est_jackpot, -7), "tickets": round(est_tickets, -4), "ev": roll},
-        "rolldowns": book, "rows": rows, "latest": latest,
+        "target": {"id": target_id, "date": target_day.isoformat(), "weekday": WEEKDAYS[target_day.weekday()], **target},
+        "rolldown_days": days_seen, "rolldowns": book, "rows": rows, "latest": latest,
     }
 
 
@@ -557,8 +648,8 @@ def make_commentary(all_rows, lotto, stale, today):
                 "paragraphs": [f"Chưa có kết quả kỳ mới nhất của {', '.join(stale)}. Nhận định sẽ cập nhật khi có số liệu."]}
     t = lotto["target"]
     first = {
-        "rolldown": f"Lotto 5/35 kỳ {lotto['id']} quay lúc 21h hôm nay, vé dừng bán 20h30. Kỳ này chỉ chia giải nếu không có người trúng Độc đắc, giá trị vé ước tính {vnd(lotto['ev']['total'])} và phụ thuộc vào số vé bán.",
-        "armed": f"Độc đắc Lotto 5/35 đã vượt 12 tỷ. Nếu chưa có người trúng, kỳ {t['id']} lúc 21h ngày {date.fromisoformat(t['date']).strftime('%d/%m')} là kỳ chia giải.",
+        "rolldown": f"Lotto 5/35 kỳ {lotto['id']} quay lúc 21h hôm nay, vé dừng bán 20h30. Kỳ này chỉ chia giải nếu không có người trúng Độc đắc, khả năng có người trúng khoảng {t['hit_low']}–{t['hit_high']}%. Giá trị vé ước tính {vnd(t['ev_low'])}–{vnd(t['ev_high'])}. Nếu mua 10 vé, khả năng thu về từ 100.000đ trở lên khoảng {round(t['back10'])}%.",
+        "armed": f"Độc đắc Lotto 5/35 đã vượt 12 tỷ. Nếu chưa có người trúng, kỳ {t['id']} lúc 21h ngày {date.fromisoformat(t['date']).strftime('%d/%m')} là kỳ chia giải, giá trị vé ước tính {vnd(t['ev_low'])}–{vnd(t['ev_high'])}, khả năng có người trúng Độc đắc và không chia giải khoảng {t['hit_low']}–{t['hit_high']}%.",
         "near": f"Độc đắc Lotto 5/35 đang ở {lotto['current_jackpot'] / 1e9:.1f}".replace(".", ",") + " tỷ, gần mốc chia giải 12 tỷ.",
     }.get(lotto["status"])
     order = [g for g in ("mega", "power", "lotto") if g in rows]
@@ -574,7 +665,7 @@ def make_commentary(all_rows, lotto, stale, today):
     else:
         headline = "Các kỳ tới đều chấm Nghỉ."
     tail = f"Giá trị vé 10.000đ: {values}."
-    if not play:
+    if not play and lotto["status"] not in ("armed", "rolldown"):
         tail += f" Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt {LIGHT_PCT}% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
     text = f"{first} {tail}" if first else tail
     return {"date": today.isoformat(), "status": lotto["status"], "headline": headline, "paragraphs": [text]}
@@ -686,7 +777,9 @@ def update_forecast_log(all_rows, all_draws, valid_rows, lotto, now):
             "ev_pct": r["ev"]["pct"], "verdict": r["verdict"], "tickets": r["tickets"], "sets": r["sets"],
             "status": r.get("status"), "draws_to": r.get("draws_to"), "target_id": target.get("id"),
             "target_date": target.get("date"), "target_jackpot": target.get("jackpot"),
-            "target_tickets": target.get("tickets"), "target_ev": (target.get("ev") or {}).get("total"), "actual": None,
+            "target_tickets": target.get("tickets"), "target_ev": (target.get("ev") or {}).get("total"),
+            "target_ev_low": target.get("ev_low"), "target_ev_high": target.get("ev_high"),
+            "target_hit": (target.get("ev") or {}).get("hit_pct"), "target_back10": target.get("back10"), "actual": None,
         })
     path.write_text("[\n" + ",\n".join(json.dumps(e, ensure_ascii=False, separators=(",", ":")) for e in log) + "\n]\n")
 
@@ -707,12 +800,17 @@ def update_forecast_log(all_rows, all_draws, valid_rows, lotto, now):
             "set_hits": round(mean(hits), 3) if hits else None, "set_hits_expected": round(k * k / n, 3),
             "sets": len(hits),
         }
-    errors = []
-    for x in lotto["rolldowns"]:
-        made = [e for e in log if e["game"] == "lotto" and e["target_id"] and e["id"] <= x["id"] and e["run_at"][:10] <= x["date"] and e["id"] > x["id"] - 30]
-        if made:
-            errors.append({"id": x["id"], "forecasts": len(made), "first_target": made[0]["target_id"], "last_target": made[-1]["target_id"]})
-    summary["rolldowns"] = errors
+    checks = []
+    for x in lotto["rolldown_days"]:
+        made = [e for e in log if e["game"] == "lotto" and e.get("target_id") == x["id"] and e["id"] <= x["id"]]
+        if not made:
+            continue
+        e = made[-1]
+        checks.append({"id": x["id"], "date": x["date"], "jackpot_est": e.get("target_jackpot"), "jackpot": x["jackpot"],
+                       "tickets_est": e.get("target_tickets"), "tickets": x["tickets"], "ev_est": e.get("target_ev"),
+                       "ev_low": e.get("target_ev_low"), "ev_high": e.get("target_ev_high"),
+                       "ev": round(x["value_pct"] * TICKET / 100), "rolled": x["rolled"], "verdict": e.get("verdict") if e["id"] == x["id"] else None})
+    summary["rolldowns"] = checks
     return summary
 
 
@@ -789,12 +887,12 @@ def main():
     lotto = lotto_block(lotto_draws, store, warnings, today)
     (DATA / "lotto.json").write_text(json.dumps(store, ensure_ascii=False, indent=0) + "\n")
     tests["lotto"] = randomness("lotto", lotto_draws)
-    if lotto["status"] in ("near", "armed", "rolldown"):
+    if lotto["status"] in ("near", "armed", "rolldown") and lotto["target"]["ev"]["pct"] >= 100:
         for r in next_rows:
             r["hold"] = True
             r["verdict"] = "Giữ vé" if r["tickets"] else r["verdict"]
             r["tickets"] = 0
-    lotto_card = {k: v for k, v in lotto.items() if k not in ("rows", "rolldowns", "latest")}
+    lotto_card = {k: v for k, v in lotto.items() if k not in ("rows", "rolldowns", "latest", "rolldown_days")}
     all_rows = next_rows + [lotto_card]
     portfolio = update_portfolio(all_rows, all_draws, today, lotto["rows"])
     write_history({**all_draws, "lotto": lotto_draws}, valid_rows, lotto)
@@ -817,7 +915,7 @@ def main():
         "generated_at": now.isoformat(timespec="minutes"), "today": today.isoformat(),
         "weekday": WEEKDAYS[today.weekday()], "commentary": commentary, "warnings": warnings, "stale": stale,
         "next": sorted(all_rows, key=lambda r: (r["date"], r["game"] != "lotto")), "latest": latest, "ev_history": ev_history,
-        "rolldowns": lotto["rolldowns"], "lotto_fixed": round(lotto_fixed_ev()), "lotto_odds": {k: round(1 / v) for k, v in LOTTO_ODDS.items()},
+        "rolldowns": lotto["rolldowns"], "rolldown_days": lotto["rolldown_days"], "lotto_fixed": round(lotto_fixed_ev()), "lotto_odds": {k: round(1 / v) for k, v in LOTTO_ODDS.items()},
         "lotto_breakeven": {str(j): round(0.95 * j * 1e9 / (TICKET - lotto_fixed_ev()), -4) for j in (13, 20, 30)},
         "breakeven": be, "tests": tests, "portfolio": portfolio, "accuracy": accuracy, "filter_check": filter_check(all_draws),
         "rules": {"ticket": TICKET, "play_pct": PLAY_PCT, "light_pct": LIGHT_PCT, "play_tickets": PLAY_TICKETS,
