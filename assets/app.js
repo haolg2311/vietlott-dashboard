@@ -186,6 +186,8 @@
     const mn = (v) => (v ? (v / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' triệu' : 'Chưa có');
     $('roll-title').hidden = !rc.length;
     $('roll-note').hidden = !rc.length;
+    const tm = ac.target_miss || {};
+    $('roll-note').textContent = `Dự báo là số trang đưa ra trước giờ quay. Giá trị vé thực tế được tính lại theo Độc đắc và vé bán thật.${tm.count ? ` Dự báo kỳ chia giải trong 20 kỳ trước đó lệch trung vị ${num(tm.median)} kỳ (${tm.count} lần dự báo).` : ''}`;
     $('roll-checks').innerHTML = rc.slice().reverse().map((r) => `<li><div class="head"><b>Kỳ ${r.id}, ${dmy(r.date)}${r.verdict ? `, chấm ${esc(r.verdict)}` : ''}</b><span>${r.rolled ? 'Có chia giải' : 'Có người trúng Độc đắc, không chia giải'}</span></div>
       <dl><dt class="cols"></dt><dd class="cols">Dự báo</dd><dd class="cols">Thực tế</dd>
       <dt>Độc đắc</dt><dd>${bn(r.jackpot_est)}</dd><dd>${bn(r.jackpot)}</dd>
@@ -206,7 +208,7 @@
       <p><b>Lotto 5/35:</b> khi Độc đắc vượt 12 tỷ mà chưa có người trúng, kỳ 21h ngày hôm sau là kỳ chia giải. Giải Nhất nhận 1/3, các giải Nhì đến Năm mỗi giải nhận 1/6 giá trị Độc đắc. Ước tính kỳ chia giải dựa trên 3 kỳ chia giải gần nhất (kể cả kỳ có người trúng Độc đắc): số vé bán thấp nhất, giữa và cao nhất, mỗi vé cộng thêm vào Độc đắc theo mức bình quân thực tế. Giá trị vé bằng phần chia sau thuế trên mỗi vé cộng ${money(d.lotto_fixed)} giải cố định, nhân khả năng không có người trúng Độc đắc. Khả năng 10 vé thu về từ 100.000đ được tính theo phân phối giải của từng vé. Kỳ chia giải chấm Chơi khi cả mức thấp của khoảng từ 100% trở lên, chấm Chơi nhẹ khi mức giữa từ 100%, còn lại Nghỉ. Kỳ thường luôn chấm Nghỉ.</p>
       <p><b>Nhận định:</b> chương trình tự viết theo mẫu cố định, chỉ dùng các số đã tính trên trang, cập nhật mỗi lần có số liệu mới.</p>
       <p><b>Sổ dự báo:</b> mỗi lượt chạy lưu lại số ước tính, nhận định và bộ số của các kỳ tới, rồi tự chấm khi có kết quả. Sổ này dùng để căn chỉnh công thức ước tính, không giúp dự đoán số trúng.</p>
-      <p><b>Ước tính:</b> số vé bán suy từ số người trúng giải ba các kỳ gần đây, jackpot kỳ tới bằng mức hiện tại cộng bình quân 2 bước tăng gần nhất của chu kỳ đang chạy.</p>
+      <p><b>Ước tính:</b> số vé bán suy từ số người trúng giải các kỳ gần đây; riêng Lotto tách theo khung 13h và 21h vì kỳ 21h bán nhiều hơn khoảng 40%. Jackpot kỳ tới bằng mức hiện tại cộng bình quân các bước tăng gần nhất. Ngày Lotto vượt 12 tỷ được tính theo bước tăng thường của từng khung giờ nhân hệ số theo mức Độc đắc, dựng từ toàn bộ lịch sử Lotto từ 29/06/2025, vì người mua dồn dập khi Độc đắc gần 12 tỷ.</p>
       <p><b>Nguồn:</b> dãy số từ <a href="https://github.com/vietvudanh/vietlott-data">vietlott-data</a>, jackpot và số người trúng từ <a href="https://xosodaiphat.com/xs-mega-xo-so-mega-645.html">Xổ số Đại Phát</a>. Dữ liệu Lotto từ <a href="https://xskt.com.vn/xslotto-5-35">XSKT</a> và <a href="https://www.minhchinh.com/xo-so-dien-toan-lotto-535.html">Minh Chính</a>. Các nguồn được đối chiếu dãy số mỗi lần cập nhật. Danh sách kỳ chia giải cũ lấy từ báo chí nên có thể chưa đủ. Mega có dữ liệu từ kỳ ${t.mega.first_id}, jackpot lưu từ tháng 3/2026, Mega trước tháng 10/2026 làm tròn đến nghìn đồng.</p>`;
   }
 

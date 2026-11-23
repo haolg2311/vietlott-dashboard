@@ -416,7 +416,8 @@ def rolldown_days(rows, store):
             continue
         rid = ((date.fromisoformat(a["date"]) + timedelta(days=1)) - date(2025, 6, 29)).days * 2 + 2
         r, pre = by_id.get(rid), by_id.get(rid - 1)
-        if r is None or not r.get("winners") or pre is None:
+        if r is None or not r.get("winners") or pre is None or any(
+                by_id[j]["jackpot_winners"] for j in range(a["id"], rid) if j in by_id):
             continue
         w = r["winners"]
         tickets = mean([w["kk"] / LOTTO_ODDS["kk"], w["g5"] / LOTTO_ODDS["g5"], w["g4"] / LOTTO_ODDS["g4"]])
@@ -454,6 +455,43 @@ def rolldown_forecast(pre, days):
         "back10": round(chance_back(mid["jackpot"], mid["tickets"]) * 100, 1),
         "pre": round(pre, -6), "per_ticket": round(add), "basis": [x["id"] for x in recent],
     }
+
+
+def level_factors(rows):
+    """Bước tăng Độc đắc so với bước tăng thường (lúc dưới 8 tỷ), theo từng mức tỷ. Người mua dồn dập khi gần 12 tỷ."""
+    by_id = {r["id"]: r for r in rows}
+    acc = {k: [] for k in range(6, 13)}
+    for r in rows:
+        a = by_id.get(r["id"] - 1)
+        if not a or a["jackpot_winners"] or r["jackpot"] < a["jackpot"] or a["jackpot"] > LOTTO["trigger"]:
+            continue
+        base = slot_base(rows, r["id"], r["id"] % 2)
+        if base:
+            acc[min(12, max(6, int(a["jackpot"] // 1e9)))].append((r["jackpot"] - a["jackpot"]) / base)
+    out = {k: median(v) if len(v) >= 5 else 1.0 for k, v in acc.items()}
+    out[12] = out[11]
+    return out
+
+
+def slot_base(rows, before_id, slot):
+    """Bước tăng thường của khung giờ (13h hoặc 21h): trung vị các kỳ dưới 8 tỷ trong 40 kỳ gần nhất."""
+    by_id = {r["id"]: r for r in rows}
+    v = [by_id[j]["jackpot"] - by_id[j - 1]["jackpot"] for j in range(before_id - 40, before_id)
+         if j in by_id and j - 1 in by_id and j % 2 == slot and by_id[j - 1]["jackpot_winners"] == 0
+         and by_id[j]["jackpot"] >= by_id[j - 1]["jackpot"] and by_id[j - 1]["jackpot"] < 8e9]
+    return median(v) if len(v) >= 3 else None
+
+
+def jackpot_path(rows, next_id, jackpot, step, limit=200):
+    """Độc đắc dự kiến sau từng kỳ tới, bước tăng theo khung giờ và theo mức Độc đắc."""
+    factors = level_factors(rows)
+    base = {s: slot_base(rows, next_id, s) for s in (0, 1)}
+    path, j = [], jackpot
+    for k in range(limit):
+        b = base[(next_id + k) % 2] or step
+        j += b * factors[min(12, max(6, int(j // 1e9)))]
+        path.append(j)
+    return path
 
 
 def draw_slot(draw_id):
@@ -512,7 +550,10 @@ def split_values(row):
 def lotto_block(draws, store, warnings, today):
     by_id = {d["id"]: d for d in draws}
     rows = []
-    for r in sorted(store["rows"], key=lambda x: x["id"]):
+    hist_file = DATA / "lotto_history.json"
+    merged = {int(k): v for k, v in json.loads(hist_file.read_text()).items()} if hist_file.exists() else {}
+    merged.update({r["id"]: r for r in store["rows"]})
+    for r in sorted(merged.values(), key=lambda x: x["id"]):
         r = {"values": dict((k, v) for k, v in LOTTO_BASE.items() if k != "kk"), **r}
         d = by_id.get(r["id"])
         if d is not None and (d["main"] + d["extra"] != r["numbers"] or d["date"] != r["date"]):
@@ -557,7 +598,8 @@ def lotto_block(draws, store, warnings, today):
     rises = [b["jackpot"] - a["jackpot"] for a, b in zip(cycle, cycle[1:]) if b["jackpot"] > a["jackpot"]][-3:]
     step = mean(rises) if rises else 240e6
     normal = [x for x in rows if x.get("winners") and x["jackpot"] <= LOTTO["trigger"] and x["id"] not in known]
-    tickets = median(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in normal[-5:])
+    same_slot = [x for x in normal if x["id"] % 2 == (latest["id"] + 1) % 2] or normal
+    tickets = median(r["winners"]["g5"] / LOTTO_ODDS["g5"] for r in same_slot[-5:])
     jackpot = last["jackpot"] if last["jackpot_winners"] == 0 and last["values"]["g2"] == LOTTO_BASE["g2"] else LOTTO["seed_jp"]
     armed_date = None
     if jackpot > LOTTO["trigger"]:
@@ -574,7 +616,8 @@ def lotto_block(draws, store, warnings, today):
         if last["id"] < last_raw["id"]:
             warnings.append("Lotto 5/35: đã qua kỳ chia giải dự kiến, đang chờ số liệu thật của kỳ đó.")
         armed_date, jackpot = None, LOTTO["seed_jp"]
-    draws_to = 0 if armed_date else max(1, math.ceil((LOTTO["trigger"] - jackpot + 1) / step))
+    path = jackpot_path(rows, next_id, jackpot, step)
+    draws_to = 0 if armed_date else next(k for k, j in enumerate(path, 1) if j > LOTTO["trigger"])
     if armed_date:
         target_day = armed_date
     else:
@@ -589,7 +632,7 @@ def lotto_block(draws, store, warnings, today):
         gap += 1
     target_id = next_id + gap
     days_seen = rolldown_days(rows, store)
-    target = rolldown_forecast(jackpot + step * gap, days_seen)
+    target = rolldown_forecast(path[gap - 1] if gap else jackpot, days_seen)
     roll = target["ev"]
     is_rolldown = armed_date is not None and (next_day, next_slot) == (armed_date, "21h")
     status = "rolldown" if is_rolldown else "armed" if armed_date else "near" if draws_to <= LOTTO["near_draws"] else "normal"
@@ -811,6 +854,14 @@ def update_forecast_log(all_rows, all_draws, valid_rows, lotto, now):
                        "ev_low": e.get("target_ev_low"), "ev_high": e.get("target_ev_high"),
                        "ev": round(x["value_pct"] * TICKET / 100), "rolled": x["rolled"], "verdict": e.get("verdict") if e["id"] == x["id"] else None})
     summary["rolldowns"] = checks
+    misses = []
+    for x in lotto["rolldown_days"]:
+        made = {}
+        for e in log:
+            if e["game"] == "lotto" and e.get("target_id") and x["id"] - 20 <= e["id"] < x["id"]:
+                made[e["id"]] = e  # mỗi kỳ lấy dự báo cuối cùng trước kỳ đó
+        misses += [abs(e["target_id"] - x["id"]) for e in made.values()]
+    summary["target_miss"] = {"median": median(misses) if misses else None, "count": len(misses)}
     return summary
 
 
