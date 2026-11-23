@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-23T10:56+07:00",
+ "generated_at": "2026-11-23T20:04+07:00",
  "today": "2026-11-23",
  "weekday": "Thứ 2",
  "commentary": {
@@ -7,7 +7,7 @@
   "status": "normal",
   "headline": "Các kỳ tới đều chấm Nghỉ.",
   "paragraphs": [
-   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1593 3.628đ, Power 6/55 kỳ 1428 3.444đ, Lotto 5/35 kỳ 1025 3.650đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
+   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1593 3.628đ, Power 6/55 kỳ 1428 3.444đ, Lotto 5/35 kỳ 1026 3.137đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
   ]
  },
  "warnings": [],
@@ -16,69 +16,69 @@
   {
    "game": "lotto",
    "name": "Lotto 5/35",
-   "id": 1025,
+   "id": 1026,
    "date": "2026-11-23",
-   "slot": "13h",
+   "slot": "21h",
    "weekday": "Thứ 2",
-   "jackpot": 8552000000.0,
+   "jackpot": 6240000000.0,
    "jackpot2": 0,
-   "tickets_est": 245000.0,
+   "tickets_est": 219000.0,
    "ev": {
     "fixed": 1734,
-    "jackpot": 1915,
+    "jackpot": 1402,
     "jackpot2": 0,
-    "total": 3650,
-    "pct": 36.5
+    "total": 3137,
+    "pct": 31.4
    },
    "verdict": "Nghỉ",
    "tickets": 0,
    "sets": [
     [
-     1,
-     7,
-     10,
-     13,
-     34,
-     11
+     6,
+     8,
+     24,
+     29,
+     32,
+     10
     ],
     [
-     3,
-     8,
-     11,
-     21,
+     6,
+     10,
+     23,
+     30,
      32,
-     11
+     12
     ]
    ],
    "status": "normal",
-   "current_jackpot": 8269000000,
+   "current_jackpot": 6000000000.0,
    "trigger": 12000000000.0,
-   "draws_to": 14,
+   "draws_to": 26,
    "target": {
-    "id": 1040,
-    "date": "2026-11-30",
+    "id": 1054,
+    "date": "2026-12-07",
     "weekday": "Thứ 2",
-    "jackpot": 22260000000.0,
+    "jackpot": 22470000000.0,
     "tickets": 2880000.0,
     "ev": {
-     "share": 7158,
+     "share": 7225,
      "fixed": 1734,
-     "total": 8892,
-     "pct": 88.9,
+     "total": 8959,
+     "pct": 89.6,
      "hit_pct": 52
     },
-    "jackpot_low": 21800000000.0,
-    "jackpot_high": 23770000000.0,
+    "jackpot_low": 22020000000.0,
+    "jackpot_high": 23980000000.0,
     "tickets_low": 2750000.0,
     "tickets_high": 3330000,
-    "ev_low": 8335,
-    "ev_high": 9096,
-    "pct_low": 83.4,
-    "pct_high": 91.0,
+    "ev_low": 8393,
+    "ev_high": 9167,
+    "pct_low": 83.9,
+    "pct_high": 91.7,
     "hit_low": 51,
     "hit_high": 57,
     "back10": 7.0,
-    "pre": 12510000000.0,
+    "pre": 12720000000.0,
     "per_ticket": 3380,
     "basis": [
      874,
@@ -198,21 +198,21 @@
    "jackpot_winners": 0
   },
   "lotto": {
-   "id": 1024,
-   "date": "2026-11-22",
-   "weekday": "Chủ nhật",
+   "id": 1025,
+   "date": "2026-11-23",
+   "weekday": "Thứ 2",
    "main": [
-    5,
-    25,
-    30,
-    31,
+    9,
+    16,
+    20,
+    28,
     33
    ],
    "extra": [
-    11
+    3
    ],
-   "jackpot": 8269000000,
-   "jackpot_winners": 0
+   "jackpot": 9096555500,
+   "jackpot_winners": 1
   }
  },
  "ev_history": {
@@ -1028,14 +1028,14 @@
    }
   },
   "lotto": {
-   "draws": 1024,
+   "draws": 1025,
    "first_id": 1,
-   "last_id": 1024,
+   "last_id": 1025,
    "first_date": "2025-06-29",
-   "chi2": 57.5,
+   "chi2": 57.8,
    "df": 34,
    "p": 0.007,
-   "expected_count": 146.3,
+   "expected_count": 146.4,
    "counts": [
     146,
     135,
@@ -1045,18 +1045,18 @@
     141,
     154,
     150,
-    136,
+    137,
     174,
     157,
     120,
     152,
     159,
     156,
-    126,
+    127,
     136,
     144,
     151,
-    167,
+    168,
     133,
     171,
     152,
@@ -1064,67 +1064,67 @@
     144,
     149,
     155,
-    162,
+    163,
     145,
     155,
     125,
     126,
-    160,
+    161,
     170,
     149
    ],
    "z": [
-    -0.03,
-    -1.01,
-    -0.65,
-    -1.45,
-    -1.9,
-    -0.47,
-    0.69,
-    0.33,
-    -0.92,
-    2.48,
-    0.96,
-    -2.35,
-    0.51,
-    1.14,
-    0.87,
-    -1.81,
-    -0.92,
-    -0.2,
-    0.42,
-    1.85,
-    -1.19,
-    2.21,
-    0.51,
-    -1.81,
-    -0.2,
-    0.24,
-    0.78,
-    1.4,
-    -0.11,
-    0.78,
-    -1.9,
-    -1.81,
-    1.22,
-    2.12,
-    0.24
+    -0.04,
+    -1.02,
+    -0.66,
+    -1.47,
+    -1.91,
+    -0.48,
+    0.68,
+    0.32,
+    -0.84,
+    2.46,
+    0.94,
+    -2.36,
+    0.5,
+    1.12,
+    0.85,
+    -1.73,
+    -0.93,
+    -0.22,
+    0.41,
+    1.93,
+    -1.2,
+    2.19,
+    0.5,
+    -1.82,
+    -0.22,
+    0.23,
+    0.77,
+    1.48,
+    -0.13,
+    0.77,
+    -1.91,
+    -1.82,
+    1.3,
+    2.1,
+    0.23
    ],
    "outside": 4,
    "outside_expected": 1.8,
    "hot": {
-    "mean": 0.712,
+    "mean": 0.713,
     "expected": 0.714,
-    "z": -0.09,
-    "p": 0.931,
-    "draws": 994
+    "z": -0.07,
+    "p": 0.941,
+    "draws": 995
    },
    "cold": {
-    "mean": 0.697,
+    "mean": 0.696,
     "expected": 0.714,
-    "z": -0.73,
-    "p": 0.463,
-    "draws": 994
+    "z": -0.76,
+    "p": 0.445,
+    "draws": 995
    }
   }
  },
@@ -1537,7 +1537,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 158,
+  "forecasts": 161,
   "start": "2026-11-03",
   "games": {
    "mega": {
@@ -1557,12 +1557,12 @@
     "sets": 18
    },
    "lotto": {
-    "scored": 39,
+    "scored": 40,
     "jackpot_error": 1.5,
-    "tickets_error": 26.3,
-    "set_hits": 0.713,
+    "tickets_error": 26.1,
+    "set_hits": 0.698,
     "set_hits_expected": 0.714,
-    "sets": 94
+    "sets": 96
    }
   },
   "rolldowns": [
