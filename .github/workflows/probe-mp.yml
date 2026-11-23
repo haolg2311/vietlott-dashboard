@@ -1,0 +1,27 @@
+name: Thử đọc lịch sử Mega Power
+on:
+  push:
+    branches: [probe-mp]
+    paths: [".github/workflows/probe-mp.yml"]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p probe; cd probe; A="Mozilla/5.0 (compatible; vietlott-dashboard/1.0)"
+          curl -s -A "$A" -o home.html https://xskt.com.vn/
+          grep -oE 'href="[^"]*(mega|power|645|655)[^"]*"' home.html | sort -u > links.txt || true
+          touch links2.txt
+          for p in $(sed 's/href="//;s/"$//' links.txt | grep -vE '^http' | head -6); do
+            f="$(echo $p | tr '/' '_').html"; curl -s -A "$A" -o "$f" "https://xskt.com.vn$p"; sleep 3
+            grep -oE 'href="[^"]*(mega|power|645|655)[^"]*"' "$f" >> links2.txt || true
+          done
+          sort -u links2.txt > links2s.txt
+          for p in $(sed 's/href="//;s/"$//' links2s.txt | grep -E 'ngay|200|100' | grep -vE '^http' | head -8); do
+            f="x$(echo $p | tr '/' '_').html"; curl -s -A "$A" -o "$f" "https://xskt.com.vn$p"; echo "$p $(wc -c < "$f")" >> fetched.txt; sleep 3
+          done
+          cd ..; git config user.name probe; git config user.email probe@users.noreply.github.com
+          git add probe; git commit -q -m "Kết quả thử MP"; git push -q origin probe-mp
