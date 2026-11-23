@@ -1,0 +1,25 @@
+name: Thử đọc lịch sử XSKT
+on:
+  push:
+    branches: [probe-xskt]
+    paths: [".github/workflows/probe-xskt.yml"]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p probe; cd probe
+          A="Mozilla/5.0 (compatible; vietlott-dashboard/1.0)"
+          curl -s -A "$A" -o robots.txt https://xskt.com.vn/robots.txt
+          curl -s -A "$A" -o main.html https://xskt.com.vn/xslotto-5-35
+          grep -oE 'href="[^"]*(lotto|loto|535)[^"]*"' main.html | sort -u > links.txt
+          for u in $(grep -oE 'href="[^"]*"' links.txt | sed 's/href="//;s/"$//' | grep -E 'ngay|[0-9]{1,2}-[0-9]{1,2}-20|200|100|90|30' | head -12); do
+            case "$u" in http*) url="$u";; *) url="https://xskt.com.vn$u";; esac
+            f=$(echo "$u" | tr '/:?=&' '_____' | cut -c1-80).html
+            curl -s -A "$A" -o "$f" "$url"; echo "$url $(wc -c < "$f")" >> fetched.txt; sleep 3
+          done
+          cd ..; git config user.name probe; git config user.email probe@users.noreply.github.com
+          git add probe; git commit -q -m "Kết quả thử"; git push -q origin probe-xskt
