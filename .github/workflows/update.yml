@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/update.yml", "scripts/fetch_results.py"]
+    paths: [".github/workflows/update.yml", "scripts/fetch_results.py", "trigger/**"]   # trigger/ do lượt Claude đẩy lên ngay sau giờ quay
 permissions:
   contents: write
 concurrency:
