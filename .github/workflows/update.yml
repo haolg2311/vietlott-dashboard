@@ -1,7 +1,7 @@
 name: Cập nhật số liệu
 on:
   schedule:
-    - cron: "37 1-23/2 * * *"   # phút 37 các giờ chẵn theo giờ Việt Nam, GitHub có thể chạy trễ
+    - cron: "37 * * * *"   # phút 37 mỗi giờ; GitHub có thể bỏ bớt hoặc chạy trễ
   workflow_dispatch:
   push:
     branches: [main]
