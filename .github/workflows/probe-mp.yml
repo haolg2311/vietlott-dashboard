@@ -1,4 +1,4 @@
-name: Thử đọc lịch sử Mega Power
+name: Lấy lịch sử Mega Power
 on:
   push:
     branches: [probe-mp]
@@ -6,22 +6,22 @@ on:
 permissions:
   contents: write
 jobs:
-  probe:
+  backfill:
     runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      max-parallel: 1
+      matrix:
+        include:
+          - {game: mega, lo: 198, hi: 1600}
+          - {game: power, lo: 1, hi: 1500}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/backfill_mp.py ${{ matrix.game }} ${{ matrix.lo }} ${{ matrix.hi }} | tee log_${{ matrix.game }}.txt
       - run: |
-          mkdir -p probe; cd probe; A="Mozilla/5.0 (compatible; vietlott-dashboard/1.0)"
-          curl -s -A "$A" -o home.html https://xskt.com.vn/
-          grep -oE 'href="[^"]*(mega|power|645|655)[^"]*"' home.html | sort -u > links.txt || true
-          touch links2.txt
-          for p in $(sed 's/href="//;s/"$//' links.txt | grep -vE '^http' | head -6); do
-            f="$(echo $p | tr '/' '_').html"; curl -s -A "$A" -o "$f" "https://xskt.com.vn$p"; sleep 3
-            grep -oE 'href="[^"]*(mega|power|645|655)[^"]*"' "$f" >> links2.txt || true
-          done
-          sort -u links2.txt > links2s.txt
-          for p in $(sed 's/href="//;s/"$//' links2s.txt | grep -E 'ngay|200|100' | grep -vE '^http' | head -8); do
-            f="x$(echo $p | tr '/' '_').html"; curl -s -A "$A" -o "$f" "https://xskt.com.vn$p"; echo "$p $(wc -c < "$f")" >> fetched.txt; sleep 3
-          done
-          cd ..; git config user.name probe; git config user.email probe@users.noreply.github.com
-          git add probe; git commit -q -m "Kết quả thử MP"; git push -q origin probe-mp
+          git config user.name probe; git config user.email probe@users.noreply.github.com
+          git add data/${{ matrix.game }}_history.json log_${{ matrix.game }}.txt; git commit -q -m "Lịch sử ${{ matrix.game }}"
+          for i in 1 2 3; do git pull -q --rebase origin probe-mp && git push -q origin probe-mp && exit 0; sleep 10; done; exit 1
