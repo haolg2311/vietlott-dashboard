@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-24T13:36+07:00",
+ "generated_at": "2026-11-24T14:31+07:00",
  "today": "2026-11-24",
  "weekday": "Thứ 3",
  "commentary": {
@@ -7,10 +7,12 @@
   "status": "normal",
   "headline": "Các kỳ tới đều chấm Nghỉ.",
   "paragraphs": [
-   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1593 3.628đ, Power 6/55 kỳ 1428 3.444đ, Lotto 5/35 kỳ 1028 3.189đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
+   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1593 3.617đ, Power 6/55 kỳ 1428 3.444đ, Lotto 5/35 kỳ 1028 3.184đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
   ]
  },
- "warnings": [],
+ "warnings": [
+  "Mega 6/45 kỳ 995: hai nguồn lệch nhau, đã bỏ kỳ này."
+ ],
  "stale": [],
  "next": [
   {
@@ -22,13 +24,13 @@
    "weekday": "Thứ 3",
    "jackpot": 6473000000,
    "jackpot2": 0,
-   "tickets_est": 219000.0,
+   "tickets_est": 245000.0,
    "ev": {
     "fixed": 1734,
-    "jackpot": 1455,
+    "jackpot": 1450,
     "jackpot2": 0,
-    "total": 3189,
-    "pct": 31.9
+    "total": 3184,
+    "pct": 31.8
    },
    "verdict": "Nghỉ",
    "tickets": 0,
@@ -53,35 +55,35 @@
    "status": "normal",
    "current_jackpot": 6324635000,
    "trigger": 12000000000.0,
-   "draws_to": 39,
+   "draws_to": 18,
    "target": {
-    "id": 1068,
-    "date": "2026-12-14",
-    "weekday": "Thứ 2",
-    "jackpot": 22010000000.0,
+    "id": 1048,
+    "date": "2026-12-04",
+    "weekday": "Thứ 6",
+    "jackpot": 25680000000.0,
     "tickets": 2880000.0,
     "ev": {
-     "share": 7078,
+     "share": 8251,
      "fixed": 1734,
-     "total": 8812,
-     "pct": 88.1,
+     "total": 9986,
+     "pct": 99.9,
      "hit_pct": 52
     },
-    "jackpot_low": 21560000000.0,
-    "jackpot_high": 23520000000,
+    "jackpot_low": 25200000000.0,
+    "jackpot_high": 26010000000.0,
     "tickets_low": 2750000.0,
-    "tickets_high": 3330000,
-    "ev_low": 8266,
-    "ev_high": 9013,
-    "pct_low": 82.7,
-    "pct_high": 90.1,
+    "tickets_high": 2980000.0,
+    "ev_low": 9821,
+    "ev_high": 10239,
+    "pct_low": 98.2,
+    "pct_high": 102.4,
     "hit_low": 51,
-    "hit_high": 57,
+    "hit_high": 53,
     "back10": 7.0,
-    "pre": 12260000000,
-    "per_ticket": 3380,
+    "pre": 15567000000.0,
+    "per_ticket": 3504,
     "basis": [
-     874,
+     948,
      988,
      1004
     ]
@@ -95,7 +97,7 @@
    "weekday": "Thứ 3",
    "jackpot": 48069000000,
    "jackpot2": 4108000000.0,
-   "tickets_est": 1340000.0,
+   "tickets_est": 1350000.0,
    "ev": {
     "fixed": 1317,
     "jackpot": 1458,
@@ -132,13 +134,13 @@
    "weekday": "Thứ 4",
    "jackpot": 21609000000,
    "jackpot2": 0,
-   "tickets_est": 920000.0,
+   "tickets_est": 1000000.0,
    "ev": {
     "fixed": 1370,
-    "jackpot": 2258,
+    "jackpot": 2247,
     "jackpot2": 0,
-    "total": 3628,
-    "pct": 36.3
+    "total": 3617,
+    "pct": 36.2
    },
    "verdict": "Nghỉ",
    "tickets": 0,
@@ -661,6 +663,102 @@
    "pct": 151.7
   },
   {
+   "id": 70,
+   "date": "2025-08-02",
+   "jackpot": 19410452000,
+   "tickets": 1442000.0,
+   "winners": 1,
+   "pct": 143.6
+  },
+  {
+   "id": 96,
+   "date": "2025-08-15",
+   "jackpot": 18934861000,
+   "tickets": 1230000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 162.0
+  },
+  {
+   "id": 146,
+   "date": "2025-09-09",
+   "jackpot": 21380563500,
+   "tickets": 1170000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 189.0
+  },
+  {
+   "id": 168,
+   "date": "2025-09-20",
+   "jackpot": 18552573500,
+   "tickets": 1650000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 122.6
+  },
+  {
+   "id": 192,
+   "date": "2025-10-02",
+   "jackpot": 22074343000,
+   "tickets": 1650000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 142.5
+  },
+  {
+   "id": 266,
+   "date": "2025-11-08",
+   "jackpot": 21373052500,
+   "tickets": 1758000.0,
+   "winners": 1,
+   "pct": 131.0
+  },
+  {
+   "id": 290,
+   "date": "2025-11-20",
+   "jackpot": 19441529500,
+   "tickets": 1690000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 125.0
+  },
+  {
+   "id": 340,
+   "date": "2025-12-15",
+   "jackpot": 20647783000,
+   "tickets": 1670000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 133.0
+  },
+  {
+   "id": 392,
+   "date": "2026-01-10",
+   "jackpot": 19939535500,
+   "tickets": 1967000.0,
+   "winners": 1,
+   "pct": 112.0
+  },
+  {
+   "id": 430,
+   "date": "2026-01-29",
+   "jackpot": 20823951500,
+   "tickets": 1650000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 135.5
+  },
+  {
+   "id": 462,
+   "date": "2026-02-14",
+   "jackpot": 23664402500,
+   "tickets": 2590000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 102.2
+  },
+  {
    "id": 492,
    "date": "2026-03-01",
    "jackpot": 24000000000,
@@ -668,6 +766,15 @@
    "basis": "Suy từ 25.653 giải Năm",
    "winners": 0,
    "pct": 124.5
+  },
+  {
+   "id": 546,
+   "date": "2026-03-28",
+   "jackpot": 21464939500,
+   "tickets": 2090000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 113.1
   },
   {
    "id": 584,
@@ -679,6 +786,41 @@
    "pct": 142.9
   },
   {
+   "id": 606,
+   "date": "2026-04-27",
+   "jackpot": 23135180500,
+   "tickets": 2274000.0,
+   "winners": 1,
+   "pct": 112.1
+  },
+  {
+   "id": 662,
+   "date": "2026-05-25",
+   "jackpot": 21326100500,
+   "tickets": 2480000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 97.3
+  },
+  {
+   "id": 734,
+   "date": "2026-06-30",
+   "jackpot": 24994035000,
+   "tickets": 2750000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 101.7
+  },
+  {
+   "id": 806,
+   "date": "2026-08-05",
+   "jackpot": 24994046000,
+   "tickets": 3420000.0,
+   "basis": "Suy từ số giải Khuyến khích",
+   "winners": 0,
+   "pct": 84.9
+  },
+  {
    "id": 874,
    "date": "2026-09-08",
    "jackpot": 30000000000,
@@ -686,6 +828,22 @@
    "basis": "Suy từ 273.491 giải Khuyến khích",
    "winners": 0,
    "pct": 100.6
+  },
+  {
+   "id": 932,
+   "date": "2026-10-07",
+   "jackpot": 26081265500,
+   "tickets": 3292000.0,
+   "winners": 2,
+   "pct": 90.6
+  },
+  {
+   "id": 948,
+   "date": "2026-10-15",
+   "jackpot": 25634220500,
+   "tickets": 2980000.0,
+   "winners": 1,
+   "pct": 97.1
   },
   {
    "id": 988,
@@ -706,15 +864,257 @@
  ],
  "rolldown_days": [
   {
-   "id": 874,
-   "date": "2026-09-08",
-   "pre": null,
-   "jackpot": 30000000000,
-   "tickets": 3330000,
-   "per_ticket": null,
+   "id": 38,
+   "date": "2025-07-17",
+   "pre": 13562060500,
+   "jackpot": 16321575500,
+   "tickets": 699000.0,
+   "per_ticket": 3950,
    "rolled": true,
    "jackpot_winners": 0,
-   "value_pct": 100.6
+   "value_pct": 237.9
+  },
+  {
+   "id": 54,
+   "date": "2025-07-25",
+   "pre": 14932091500,
+   "jackpot": 19639152000,
+   "tickets": 1192000.0,
+   "per_ticket": 3947,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 172.1
+  },
+  {
+   "id": 70,
+   "date": "2025-08-02",
+   "pre": 14408047500,
+   "jackpot": 19410452000,
+   "tickets": 1442000.0,
+   "per_ticket": 3470,
+   "rolled": false,
+   "jackpot_winners": 1,
+   "value_pct": 143.6
+  },
+  {
+   "id": 96,
+   "date": "2025-08-15",
+   "pre": 13964416500,
+   "jackpot": 18934861000,
+   "tickets": 1235000.0,
+   "per_ticket": 4023,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 161.3
+  },
+  {
+   "id": 146,
+   "date": "2025-09-09",
+   "pre": 15355778500,
+   "jackpot": 21380563500,
+   "tickets": 1314000.0,
+   "per_ticket": 4586,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 170.1
+  },
+  {
+   "id": 168,
+   "date": "2025-09-20",
+   "pre": 13448056500,
+   "jackpot": 18552573500,
+   "tickets": 1430000.0,
+   "per_ticket": 3569,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 139.0
+  },
+  {
+   "id": 192,
+   "date": "2025-10-02",
+   "pre": 14958430500,
+   "jackpot": 22074343000,
+   "tickets": 1580000.0,
+   "per_ticket": 4503,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 148.1
+  },
+  {
+   "id": 266,
+   "date": "2025-11-08",
+   "pre": 14697284000,
+   "jackpot": 21373052500,
+   "tickets": 1758000.0,
+   "per_ticket": 3797,
+   "rolled": false,
+   "jackpot_winners": 1,
+   "value_pct": 131.0
+  },
+  {
+   "id": 290,
+   "date": "2025-11-20",
+   "pre": 13403127500,
+   "jackpot": 19441529500,
+   "tickets": 1568000.0,
+   "per_ticket": 3850,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 133.5
+  },
+  {
+   "id": 340,
+   "date": "2025-12-15",
+   "pre": 13522877000,
+   "jackpot": 20647783000,
+   "tickets": 1737000.0,
+   "per_ticket": 4101,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 128.5
+  },
+  {
+   "id": 392,
+   "date": "2026-01-10",
+   "pre": 13652467000,
+   "jackpot": 19939535500,
+   "tickets": 1967000.0,
+   "per_ticket": 3196,
+   "rolled": false,
+   "jackpot_winners": 1,
+   "value_pct": 112.0
+  },
+  {
+   "id": 430,
+   "date": "2026-01-29",
+   "pre": 13849507500,
+   "jackpot": 20823951500,
+   "tickets": 1791000.0,
+   "per_ticket": 3893,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 126.0
+  },
+  {
+   "id": 462,
+   "date": "2026-02-14",
+   "pre": 15922947500,
+   "jackpot": 23664402500,
+   "tickets": 2518000.0,
+   "per_ticket": 3074,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 104.7
+  },
+  {
+   "id": 492,
+   "date": "2026-03-01",
+   "pre": 15757351000,
+   "jackpot": 24387363000,
+   "tickets": 2033000.0,
+   "per_ticket": 4245,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 129.2
+  },
+  {
+   "id": 546,
+   "date": "2026-03-28",
+   "pre": 13815185500,
+   "jackpot": 21464939500,
+   "tickets": 1951000.0,
+   "per_ticket": 3921,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 120.1
+  },
+  {
+   "id": 584,
+   "date": "2026-04-16",
+   "pre": 13927145000,
+   "jackpot": 22370500000,
+   "tickets": 1843000.0,
+   "per_ticket": 4582,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 130.8
+  },
+  {
+   "id": 606,
+   "date": "2026-04-27",
+   "pre": 14282461000,
+   "jackpot": 23135180500,
+   "tickets": 2274000.0,
+   "per_ticket": 3894,
+   "rolled": false,
+   "jackpot_winners": 1,
+   "value_pct": 112.1
+  },
+  {
+   "id": 662,
+   "date": "2026-05-25",
+   "pre": 13398512500,
+   "jackpot": 21326100500,
+   "tickets": 2282000.0,
+   "per_ticket": 3475,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 104.4
+  },
+  {
+   "id": 734,
+   "date": "2026-06-30",
+   "pre": 15711345500,
+   "jackpot": 24994035000,
+   "tickets": 2467000.0,
+   "per_ticket": 3763,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 111.5
+  },
+  {
+   "id": 806,
+   "date": "2026-08-05",
+   "pre": 14537041000,
+   "jackpot": 24994046000,
+   "tickets": 3288000.0,
+   "per_ticket": 3180,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 87.7
+  },
+  {
+   "id": 874,
+   "date": "2026-09-08",
+   "pre": 17394994500,
+   "jackpot": 30222001000,
+   "tickets": 3312000.0,
+   "per_ticket": 3873,
+   "rolled": true,
+   "jackpot_winners": 0,
+   "value_pct": 101.7
+  },
+  {
+   "id": 932,
+   "date": "2026-10-07",
+   "pre": 14752428500,
+   "jackpot": 26081265500,
+   "tickets": 3292000.0,
+   "per_ticket": 3441,
+   "rolled": false,
+   "jackpot_winners": 2,
+   "value_pct": 90.6
+  },
+  {
+   "id": 948,
+   "date": "2026-10-15",
+   "pre": 14453529500,
+   "jackpot": 25634220500,
+   "tickets": 2980000.0,
+   "per_ticket": 3752,
+   "rolled": false,
+   "jackpot_winners": 1,
+   "value_pct": 97.1
   },
   {
    "id": 988,
@@ -756,13 +1156,13 @@
  },
  "breakeven": {
   "mega": {
-   "45": 30000000000.0,
-   "55": 39500000000.0,
-   "100": 82600000000.0
+   "45": 30100000000.0,
+   "55": 39700000000.0,
+   "100": 83000000000.0
   },
   "power": {
    "45": 82900000000.0,
-   "55": 115800000000.0,
+   "55": 115900000000.0,
    "100": 264200000000.0
   }
  },
@@ -1537,7 +1937,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 166,
+  "forecasts": 169,
   "start": "2026-11-03",
   "games": {
    "mega": {
@@ -1594,7 +1994,11 @@
     "rolled": false,
     "verdict": "Chơi"
    }
-  ]
+  ],
+  "target_miss": {
+   "median": 14.0,
+   "count": 20
+  }
  },
  "filter_check": {
   "tickets": 112800,
