@@ -1,16 +1,18 @@
 {
- "generated_at": "2026-11-23T21:55+07:00",
- "today": "2026-11-23",
- "weekday": "Thứ 2",
+ "generated_at": "2026-11-24T07:36+07:00",
+ "today": "2026-11-24",
+ "weekday": "Thứ 3",
  "commentary": {
-  "date": "2026-11-23",
+  "date": "2026-11-24",
   "status": "normal",
   "headline": "Các kỳ tới đều chấm Nghỉ.",
   "paragraphs": [
-   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1593 3.628đ, Power 6/55 kỳ 1428 3.444đ, Lotto 5/35 kỳ 1027 3.183đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
+   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1593 3.617đ, Power 6/55 kỳ 1428 3.444đ, Lotto 5/35 kỳ 1027 3.183đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
   ]
  },
- "warnings": [],
+ "warnings": [
+  "Mega 6/45 kỳ 995: hai nguồn lệch nhau, đã bỏ kỳ này."
+ ],
  "stale": [],
  "next": [
   {
@@ -95,7 +97,7 @@
    "weekday": "Thứ 3",
    "jackpot": 48069000000,
    "jackpot2": 4108000000.0,
-   "tickets_est": 1340000.0,
+   "tickets_est": 1350000.0,
    "ev": {
     "fixed": 1317,
     "jackpot": 1458,
@@ -132,13 +134,13 @@
    "weekday": "Thứ 4",
    "jackpot": 21609000000,
    "jackpot2": 0,
-   "tickets_est": 920000.0,
+   "tickets_est": 1000000.0,
    "ev": {
     "fixed": 1370,
-    "jackpot": 2258,
+    "jackpot": 2247,
     "jackpot2": 0,
-    "total": 3628,
-    "pct": 36.3
+    "total": 3617,
+    "pct": 36.2
    },
    "verdict": "Nghỉ",
    "tickets": 0,
@@ -1154,13 +1156,13 @@
  },
  "breakeven": {
   "mega": {
-   "45": 30000000000.0,
-   "55": 39500000000.0,
-   "100": 82600000000.0
+   "45": 30100000000.0,
+   "55": 39700000000.0,
+   "100": 83000000000.0
   },
   "power": {
    "45": 82900000000.0,
-   "55": 115800000000.0,
+   "55": 115900000000.0,
    "100": 264200000000.0
   }
  },
@@ -1935,7 +1937,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 162,
+  "forecasts": 165,
   "start": "2026-11-03",
   "games": {
    "mega": {

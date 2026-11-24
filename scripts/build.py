@@ -164,6 +164,35 @@ def recent_tickets(game, rows):
     return mean(est_tickets(game, r) for r in full[-3:])
 
 
+def sales_beta(game, rows):
+    """Độ nhạy của vé bán theo jackpot, dựng từ lịch sử: jackpot tăng 1% thì vé bán tăng khoảng beta%."""
+    full = [r for r in rows if r.get("g3")]
+    xs, ys = [], []
+    for k in range(8, len(full)):
+        prev = full[k - 6:k]
+        if prev[-1]["jackpot_winners"]:
+            continue
+        nref = median(est_tickets(game, p) for p in prev)
+        jref = median(p["jackpot"] for p in prev)
+        xs.append(math.log(full[k]["jackpot"] / jref))
+        ys.append(math.log(est_tickets(game, full[k]) / nref))
+    if len(xs) < 50:
+        return 0.0
+    mx, my = mean(xs), mean(ys)
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sum((x - mx) ** 2 for x in xs)
+
+
+def sales_estimate(game, rows, next_jackpot):
+    """Vé bán kỳ tới: mức của 6 kỳ gần nhất điều chỉnh theo jackpot kỳ tới. Ngay sau khi nổ jackpot dùng cách cũ."""
+    full = [r for r in rows if r.get("g3")]
+    if rows[-1]["jackpot_winners"] > 0 or len(full) < 8:
+        return recent_tickets(game, rows)
+    prev = full[-6:]
+    nref = median(est_tickets(game, p) for p in prev)
+    jref = median(p["jackpot"] for p in prev)
+    return nref * (next_jackpot / jref) ** sales_beta(game, rows)
+
+
 def est_next(game, rows):
     """Jackpot kỳ tới bằng mức hiện tại cộng bình quân 2 bước tăng gần nhất của chu kỳ đang chạy.
 
@@ -883,7 +912,10 @@ def main():
         draws = all_draws[game]
         by_id = {d["id"]: d for d in draws}
         rows = []
-        for r in sorted(jackpots[game], key=lambda x: x["id"]):
+        hist_file = DATA / f"{game}_history.json"
+        merged = {int(k): v for k, v in json.loads(hist_file.read_text()).items()} if hist_file.exists() else {}
+        merged.update({r["id"]: r for r in jackpots[game]})
+        for r in sorted(merged.values(), key=lambda x: x["id"]):
             d = by_id.get(r["id"])
             if d is None and r["id"] > draws[-1]["id"]:
                 d = {"id": r["id"], "date": r["date"], "main": r["numbers"][:6], "extra": r["numbers"][6:]}
@@ -905,8 +937,8 @@ def main():
         if not rows or rows[-1]["date"] < due_game(info["days"], now).isoformat():
             stale.append(info["name"])
 
-        tickets = recent_tickets(game, rows)
         est = est_next(game, rows)
+        tickets = sales_estimate(game, rows, est["jackpot"])
         ev = ticket_ev(game, est["jackpot"], est["jackpot2"], tickets)
         label, count = verdict(ev["pct"])
         when = next_date(game, last_date)
