@@ -915,6 +915,7 @@ def main():
         hist_file = DATA / f"{game}_history.json"
         merged = {int(k): v for k, v in json.loads(hist_file.read_text()).items()} if hist_file.exists() else {}
         merged.update({r["id"]: r for r in jackpots[game]})
+        live_ids = {r["id"] for r in jackpots[game]}
         for r in sorted(merged.values(), key=lambda x: x["id"]):
             d = by_id.get(r["id"])
             if d is None and r["id"] > draws[-1]["id"]:
@@ -924,7 +925,8 @@ def main():
             if d is None:
                 warnings.append(f"{info['name']} kỳ {r['id']}: chưa có trong dữ liệu kết quả.")
             elif d["main"] + d["extra"] != r["numbers"] or d["date"] != r["date"]:
-                warnings.append(f"{info['name']} kỳ {r['id']}: hai nguồn lệch nhau, đã bỏ kỳ này.")
+                if r["id"] in live_ids:  # kỳ lịch sử lệch nguồn thì bỏ, không báo trên trang
+                    warnings.append(f"{info['name']} kỳ {r['id']}: hai nguồn lệch nhau, đã bỏ kỳ này.")
             else:
                 rows.append(r)
         valid_rows[game] = rows
