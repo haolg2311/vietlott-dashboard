@@ -31,6 +31,9 @@
       <p class="bar-note">${last.jackpot == null ? 'Đang chờ nguồn đăng jackpot và số người trúng' : `Jackpot ${billions(last.jackpot)}, ${last.jackpot_winners ? `${last.jackpot_winners} người trúng` : 'chưa có người trúng'}`}</p></div>`;
   }
 
+  const quiet = (n) => n.crowd && n.crowd < 0.995
+    ? `<p class="bar-note">Bộ số chọn trong nhóm ít người chọn nhất theo dữ liệu. Nếu trúng, dự kiến ít người trúng cùng hơn khoảng ${Math.round((1 - n.crowd) * 100)}% so với bộ số bình quân. Không làm tăng khả năng trúng.</p>` : '';
+
   function lottoCard(n, last) {
     const t = n.target;
     const note = {
@@ -48,9 +51,9 @@
       <div class="bar" role="img" aria-label="Độc đắc so với mốc chia giải 12 tỷ"><i style="width:${Math.min(100, n.current_jackpot / n.trigger * 100)}%"></i></div>
       <p class="bar-note">${esc(note)}</p>
       ${n.status === 'rolldown'
-        ? `<p class="bar-note">Độc đắc lúc quay ước tính ${billions(t.jackpot_low)}–${billions(t.jackpot_high)}. Giá trị vé trong khoảng ${money(t.ev_low)}–${money(t.ev_high)}. Mua 10 vé, khả năng thu về từ 100.000đ trở lên khoảng ${pct(t.back10, 0)}.</p>`
-        : `<p class="bar-note">Ước tính ở kỳ chia giải: giá trị vé khoảng ${money(t.ev_low)}–${money(t.ev_high)}, khả năng có người trúng Độc đắc và không chia giải khoảng ${t.hit_low}–${t.hit_high}%.</p>`}
-      <div class="picks"><h3>${esc(title)}</h3>${n.sets.map((s) => balls(s.slice(0, 5), s.slice(5))).join('')}</div>
+        ? `<p class="bar-note">Độc đắc lúc quay ước tính ${billions(t.jackpot_low)}–${billions(t.jackpot_high)}. Giá trị vé trong khoảng ${money(t.ev_low)}–${money(t.ev_high)}. Mua 10 vé, khả năng thu về từ 100.000đ trở lên khoảng ${pct(t.back10, 0)}.${t.ev_quiet ? ` Với bộ số của trang (ít người chọn), giá trị vé khoảng ${money(t.ev_quiet)}.` : ''}</p>`
+        : `<p class="bar-note">Ước tính ở kỳ chia giải: giá trị vé khoảng ${money(t.ev_low)}–${money(t.ev_high)}, khả năng có người trúng Độc đắc và không chia giải khoảng ${t.hit_low}–${t.hit_high}%.${t.ev_quiet ? ` Với bộ số của trang, khoảng ${money(t.ev_quiet)}.` : ''}</p>`}
+      <div class="picks"><h3>${esc(title)}</h3>${n.sets.map((s) => balls(s.slice(0, 5), s.slice(5))).join('')}${quiet(n)}</div>
       ${lastBlock(last)}</article>`;
   }
 
@@ -66,7 +69,7 @@
       <div class="bar" role="img" aria-label="Giá trị vé bằng ${pct(n.ev.pct)} giá mua"><i style="width:${Math.min(100, n.ev.pct)}%"></i></div>
       <p class="bar-note">Bằng ${pct(n.ev.pct)} giá vé${power ? `, Jackpot 2 ước tính ${billions(n.jackpot2)}` : ''}</p>
       ${n.hold ? '<p class="bar-note">Giữ ngân sách tuần cho kỳ chia giải Lotto 5/35</p>' : ''}
-      <div class="picks"><h3>${esc(title)}</h3>${n.sets.map((s) => balls(s)).join('')}</div>
+      <div class="picks"><h3>${esc(title)}</h3>${n.sets.map((s) => balls(s)).join('')}${quiet(n)}</div>
       ${lastBlock(last)}</article>`;
   }
 
@@ -202,10 +205,11 @@
       ${row('Số trùng mỗi kỳ nếu chọn số lạnh', (x) => x.cold.mean)}
       ${row('Số trùng kỳ vọng khi chọn ngẫu nhiên', (x) => x.hot.expected)}</div>
       ${t.lotto.p < 0.05 ? '<p>Lotto có p thấp hơn mức thường, nhưng khi chạy nhiều phép thử thì điều này có thể do ngẫu nhiên. Trang tiếp tục theo dõi và không dùng để chọn số.</p>' : ''}
-      <p>Bộ số gợi ý không làm tăng khả năng trúng: tỷ lệ vé trúng từ giải ba trở lên là ${pct(f.filter_win_pct, 2)}, so với ${pct(f.random_win_pct, 2)} khi chọn ngẫu nhiên. Việc tránh số đông người chọn mới là giả thuyết, dữ liệu hiện chưa đủ chứng minh.</p>`;
+      <p>Bộ số của trang không làm tăng khả năng trúng: tỷ lệ vé trúng từ giải ba trở lên là ${pct(f.filter_win_pct, 2)}, so với ${pct(f.random_win_pct, 2)} khi chọn ngẫu nhiên. Điều trang làm được là chọn số ít người chọn: suy từ số người trúng ở ${fmt((d.popularity.mega || {}).draws || 0)} kỳ Mega, ${fmt((d.popularity.power || {}).draws || 0)} kỳ Power và ${fmt((d.popularity.lotto || {}).draws || 0)} kỳ Lotto, các số nhỏ (ngày, tháng sinh) được chọn nhiều hơn hẳn. Kiểm chứng trên phần lịch sử chưa dùng để dựng: bộ số trong nhóm 10% ít người chọn nhất có số người trúng cùng thấp hơn bình quân khoảng ${['mega', 'power', 'lotto'].map((g) => `${Math.round((1 - ((d.popularity[g] || {}).validated || 1)) * 100)}% ở ${names[g].split(' ')[0]}`).join(', ')}. Trang không ghi mức cao hơn mức đã kiểm chứng này. Lợi ích chỉ có khi trúng: ít người chia Jackpot hơn, và ở kỳ chia giải Lotto mỗi người trúng nhận phần chia lớn hơn.</p>`;
     $('method').innerHTML = `<p><b>Giá trị vé</b> là số tiền bình quân một vé thu về: xác suất từng giải nhân tiền thực nhận, đã trừ thuế 10% phần giải vượt 20 triệu và rủi ro chia giải.</p>
       <p><b>Nhận định:</b> dưới ${d.rules.light_pct}% nghỉ, từ ${d.rules.light_pct}% chơi nhẹ ${d.rules.light_tickets} vé, từ ${d.rules.play_pct}% chơi ${d.rules.play_tickets} vé, tối đa ${d.rules.week_tickets} vé mỗi tuần. Đây là ngưỡng do trang đặt ra. Mốc hòa vốn là gần đúng vì vé bán thường tăng khi jackpot cao.</p>
       <p><b>Lotto 5/35:</b> khi Độc đắc vượt 12 tỷ mà chưa có người trúng, kỳ 21h ngày hôm sau là kỳ chia giải. Giải Nhất nhận 1/3, các giải Nhì đến Năm mỗi giải nhận 1/6 giá trị Độc đắc. Ước tính kỳ chia giải dựa trên 3 kỳ chia giải gần nhất (kể cả kỳ có người trúng Độc đắc): số vé bán thấp nhất, giữa và cao nhất, mỗi vé cộng thêm vào Độc đắc theo mức bình quân thực tế. Giá trị vé bằng phần chia sau thuế trên mỗi vé cộng ${money(d.lotto_fixed)} giải cố định, nhân khả năng không có người trúng Độc đắc. Khả năng 10 vé thu về từ 100.000đ được tính theo phân phối giải của từng vé. Kỳ chia giải chấm Chơi khi cả mức thấp của khoảng từ 100% trở lên, chấm Chơi nhẹ khi mức giữa từ 100%, còn lại Nghỉ. Kỳ thường luôn chấm Nghỉ.</p>
+      <p><b>Bộ số tham khảo:</b> mỗi kỳ máy thử 4.000 bộ số ngẫu nhiên, chấm độ phổ biến theo mô hình dựng từ lịch sử, rồi chọn ngẫu nhiên trong 10% bộ ít người chọn nhất để bộ số vẫn đổi mỗi kỳ. Số đặc biệt Lotto chọn ngẫu nhiên. Nếu nhiều người cùng mua theo một bộ số của trang thì lợi ích này giảm.</p>
       <p><b>Nhận định:</b> chương trình tự viết theo mẫu cố định, chỉ dùng các số đã tính trên trang, cập nhật mỗi lần có số liệu mới.</p>
       <p><b>Sổ dự báo:</b> mỗi lượt chạy lưu lại số ước tính, nhận định và bộ số của các kỳ tới, rồi tự chấm khi có kết quả. Sổ này dùng để căn chỉnh công thức ước tính, không giúp dự đoán số trúng.</p>
       <p><b>Ước tính:</b> số vé bán suy từ số người trúng giải các kỳ gần đây; Mega và Power điều chỉnh theo jackpot kỳ tới vì jackpot càng cao càng nhiều người mua (độ nhạy dựng từ lịch sử từ năm 2017); riêng Lotto tách theo khung 13h và 21h vì kỳ 21h bán nhiều hơn khoảng 40%. Jackpot kỳ tới bằng mức hiện tại cộng bình quân các bước tăng gần nhất. Ngày Lotto vượt 12 tỷ được tính theo bước tăng thường của từng khung giờ nhân hệ số theo mức Độc đắc, dựng từ toàn bộ lịch sử Lotto từ 29/06/2025, vì người mua dồn dập khi Độc đắc gần 12 tỷ.</p>
