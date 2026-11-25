@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-25T21:37+07:00",
- "today": "2026-11-25",
- "weekday": "Thứ 4",
+ "generated_at": "2026-11-26T06:46+07:00",
+ "today": "2026-11-26",
+ "weekday": "Thứ 5",
  "commentary": {
-  "date": "2026-11-25",
+  "date": "2026-11-26",
   "status": "normal",
   "headline": "Các kỳ tới đều chấm Nghỉ.",
   "paragraphs": [
@@ -1856,7 +1856,7 @@
   ]
  },
  "accuracy": {
-  "forecasts": 180,
+  "forecasts": 183,
   "start": "2026-11-03",
   "games": {
    "mega": {
