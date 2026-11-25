@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-25T19:31+07:00",
+ "generated_at": "2026-11-25T19:32+07:00",
  "today": "2026-11-25",
  "weekday": "Thứ 4",
  "commentary": {
@@ -7,12 +7,10 @@
   "status": "normal",
   "headline": "Các kỳ tới đều chấm Nghỉ.",
   "paragraphs": [
-   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1594 3.813đ, Power 6/55 kỳ 1429 3.558đ, Lotto 5/35 kỳ 1030 3.256đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
+   "Giá trị vé 10.000đ: Mega 6/45 kỳ 1594 3.888đ, Power 6/55 kỳ 1429 3.558đ, Lotto 5/35 kỳ 1030 3.256đ. Mega 6/45 và Power 6/55 chuyển sang Chơi nhẹ khi giá trị vé đạt 45% giá vé, Lotto 5/35 chỉ được cân nhắc ở kỳ chia giải."
   ]
  },
- "warnings": [
-  "Mega 6/45: chưa có jackpot kỳ 1593, sẽ cập nhật ở lượt sau."
- ],
+ "warnings": [],
  "stale": [],
  "next": [
   {
@@ -132,15 +130,15 @@
    "id": 1594,
    "date": "2026-11-27",
    "weekday": "Thứ 6",
-   "jackpot": 23560000000,
+   "jackpot": 24212000000,
    "jackpot2": 0,
-   "tickets_est": 1040000.0,
+   "tickets_est": 1000000.0,
    "ev": {
     "fixed": 1370,
-    "jackpot": 2444,
+    "jackpot": 2518,
     "jackpot2": 0,
-    "total": 3813,
-    "pct": 38.1
+    "total": 3888,
+    "pct": 38.9
    },
    "verdict": "Nghỉ",
    "tickets": 0,
@@ -178,8 +176,8 @@
     38
    ],
    "extra": [],
-   "jackpot": null,
-   "jackpot_winners": null
+   "jackpot": 22004635500,
+   "jackpot_winners": 0
   },
   "power": {
    "id": 1428,
@@ -219,13 +217,6 @@
  },
  "ev_history": {
   "mega": [
-   {
-    "id": 1563,
-    "date": "2026-09-16",
-    "jackpot": 77330101000,
-    "winners": 0,
-    "pct": 89.2
-   },
    {
     "id": 1564,
     "date": "2026-09-18",
@@ -428,6 +419,13 @@
     "jackpot": 19658014000,
     "winners": 0,
     "pct": 34.3
+   },
+   {
+    "id": 1593,
+    "date": "2026-11-25",
+    "jackpot": 22004635500,
+    "winners": 0,
+    "pct": 36.8
    }
   ],
   "power": [
@@ -1156,9 +1154,9 @@
  },
  "breakeven": {
   "mega": {
-   "45": 30200000000.0,
-   "55": 39800000000.0,
-   "100": 83200000000.0
+   "45": 30100000000.0,
+   "55": 39700000000.0,
+   "100": 83000000000.0
   },
   "power": {
    "45": 83200000000.0,
@@ -1780,12 +1778,12 @@
   "start": "2026-11-03",
   "games": {
    "mega": {
-    "scored": 9,
-    "jackpot_error": 0.8,
-    "tickets_error": 5.0,
-    "set_hits": 0.778,
+    "scored": 10,
+    "jackpot_error": 0.9,
+    "tickets_error": 6.0,
+    "set_hits": 0.75,
     "set_hits_expected": 0.8,
-    "sets": 18
+    "sets": 20
    },
    "power": {
     "scored": 10,
