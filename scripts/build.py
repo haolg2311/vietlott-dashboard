@@ -16,6 +16,8 @@ from pathlib import Path
 from statistics import mean, median
 
 from scipy.stats import chi2, norm
+import numpy as np
+from functools import lru_cache
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -253,6 +255,79 @@ def pick_filtered(rng, pool, last_main):
             return sorted(nums)
 
 
+POP_SHAPE = {"mega": (45, 6), "power": (55, 6), "lotto": (35, 5)}
+
+
+@lru_cache(maxsize=None)
+def popularity(game):
+    """Độ phổ biến của từng số, suy từ số người trúng so với vé bán ở toàn bộ lịch sử.
+
+    Mega, Power: số người trúng giải Ba chia cho bước tăng jackpot (tỷ lệ cố định của doanh thu).
+    Lotto: số người trúng giải Năm chia cho số người trúng giải Khuyến khích. Kỳ nào số đã ra là số
+    nhiều người chọn thì tỷ lệ này cao. Hồi quy có phạt (ridge) cho từng số, rồi hiệu chỉnh độ dốc
+    theo kiểm chứng ngoài mẫu để con số ước tính không phóng đại.
+    """
+    pool, k = POP_SHAPE[game]
+    rows = {int(i): r for i, r in json.loads((DATA / f"{game}_history.json").read_text()).items()} \
+        if (DATA / f"{game}_history.json").exists() else {}
+    live = json.loads((DATA / "lotto.json").read_text())["rows"] if game == "lotto" else json.loads((DATA / "jackpots.json").read_text())[game]
+    rows.update({r["id"]: r for r in live})
+    xs, ys = [], []
+    for i in sorted(rows):
+        r, p = rows[i], rows.get(i - 1)
+        if game == "lotto":
+            w = r.get("winners") or {}
+            if not w.get("kk") or not w.get("g5"):
+                continue
+            y, nums = math.log(w["g5"] / w["kk"]), r["numbers"][:5]
+        else:
+            if not p or p["jackpot_winners"] or r["jackpot"] <= p["jackpot"] or not r.get("g3"):
+                continue
+            y, nums = math.log(r["g3"] / (r["jackpot"] - p["jackpot"])), r["numbers"][:6]
+        x = np.zeros(pool)
+        x[[n - 1 for n in nums]] = 1
+        xs.append(x)
+        ys.append(y)
+    if len(ys) < 200:
+        return None
+    X, Y = np.array(xs), np.array(ys)
+    Y = np.array([y - np.median(Y[max(0, j - 20):j + 21]) for j, y in enumerate(Y)])  # bỏ xu hướng theo thời gian
+    half = len(Y) // 2
+    fit = lambda A, b: np.linalg.solve(A.T @ A + 20 * np.eye(pool), A.T @ b)
+    w_half = fit(X[:half], Y[:half])
+    pred = X[half:] @ w_half
+    slope = float(np.polyfit(pred, Y[half:], 1)[0])
+    rng0 = random.Random(3)
+    rand_scores = np.array([w_half[rng0.sample(range(pool), k)].sum() for _ in range(20000)])
+    low = Y[half:][pred <= np.quantile(rand_scores, 0.10)]
+    validated = math.exp(float(low.mean() - Y[half:].mean())) if len(low) >= 20 else 1.0
+    w = fit(X, Y) * max(0.0, slope)
+    rng = random.Random(7)
+    base = float(np.mean([w[rng.sample(range(pool), k)].sum() for _ in range(20000)]))
+    return {"w": w.tolist(), "base": base, "draws": len(Y), "validated": round(validated, 3), "r": round(float(np.corrcoef(X[half:] @ w_half, Y[half:])[0, 1]), 2)}
+
+
+def crowd_factor(game, nums):
+    """Số người trúng cùng dự kiến của bộ số so với bộ số bình quân (1 = bình quân)."""
+    m = popularity(game)
+    if not m:
+        return 1.0
+    # không hứa hơn mức đã kiểm chứng ngoài mẫu cho nhóm 10% ít người chọn nhất
+    return max(math.exp(sum(m["w"][n - 1] for n in nums) - m["base"]), m["validated"])
+
+
+def pick_quiet(rng, game, count):
+    """Chọn ngẫu nhiên trong 10% bộ số ít người chọn nhất của 4.000 bộ thử, để vẫn đổi bộ số mỗi kỳ."""
+    pool, k = POP_SHAPE[game]
+    cands = {tuple(sorted(rng.sample(range(1, pool + 1), k))) for _ in range(4000)}
+    ranked = sorted(cands, key=lambda c: crowd_factor(game, c))
+    top = ranked[:max(count * 3, len(ranked) // 10)]
+    chosen = rng.sample(top, count)
+    if game == "lotto":
+        return [list(c) + [rng.randint(1, 12)] for c in chosen]
+    return [list(c) for c in chosen]
+
+
 def pick_random(rng, pool):
     return sorted(rng.sample(range(1, pool + 1), 6))
 
@@ -323,7 +398,8 @@ def filter_check(all_draws):
             main = set(draws[i]["main"])
             for sim in range(FULL_SIMS):
                 rng = seeded("full", game, i, sim)
-                wins["filter"] += len(main & set(pick_filtered(rng, pool, draws[i - 1]["main"]))) >= 3
+                quiet = min((tuple(rng.sample(range(1, pool + 1), 6)) for _ in range(20)), key=lambda c: crowd_factor(game, c))
+                wins["filter"] += len(main & set(quiet)) >= 3
                 wins["random"] += len(main & set(pick_random(rng, pool))) >= 3
                 tickets += 1
     weights = {g: (len(d) - 1) * FULL_SIMS for g, d in all_draws.items() if g != "lotto"}
@@ -386,11 +462,14 @@ def rolldown_ev(jackpot, tickets):
     return {"share": round(extra), "fixed": round(lotto_fixed_ev()), "total": round(total), "pct": round(total / TICKET * 100, 1)}
 
 
-def rolldown_ahead(jackpot, tickets):
-    """Giá trị vé trước kỳ quay. Có người trúng Độc đắc thì không chia giải, tiền về người trúng."""
+def rolldown_ahead(jackpot, tickets, crowd=1.0):
+    """Giá trị vé trước kỳ quay. Có người trúng Độc đắc thì không chia giải, tiền về người trúng.
+
+    crowd < 1 là bộ số ít người chọn: khi trúng, phần chia được chia cho ít người hơn (gần đúng tỷ lệ 1/crowd).
+    """
     split = rolldown_ev(jackpot, tickets)
     miss = math.exp(-tickets * LOTTO_ODDS["jp"])
-    share = miss * split["share"] + (1 - miss) * net(jackpot) / tickets
+    share = miss * split["share"] / crowd + (1 - miss) * net(jackpot) / tickets
     total = share + lotto_fixed_ev()
     return {"share": round(share), "fixed": split["fixed"], "total": round(total), "pct": round(total / TICKET * 100, 1),
             "hit_pct": round((1 - miss) * 100)}
@@ -680,7 +759,10 @@ def lotto_block(draws, store, warnings, today):
     else:
         label, count = "Nghỉ", 0
     rng = seeded("set", "lotto", next_id)
-    sets = [pick_lotto(rng, latest["main"]) for _ in range(max(count, LIGHT_TICKETS))]
+    sets = pick_quiet(rng, "lotto", max(count, LIGHT_TICKETS))
+    crowd = mean(crowd_factor("lotto", x[:5]) for x in sets)
+    target["crowd"] = round(crowd, 3)
+    target["ev_quiet"] = rolldown_ahead(target["jackpot"], target["tickets"], crowd)["total"]
     book = {x["id"]: dict(x, winners=0, pct=rolldown_ahead(x["jackpot"], x["tickets"])["pct"]) for x in store["rolldowns"]}
     for x in days_seen:
         book.setdefault(x["id"], {"id": x["id"], "date": x["date"], "jackpot": x["jackpot"], "tickets": x["tickets"],
@@ -690,6 +772,7 @@ def lotto_block(draws, store, warnings, today):
         "game": "lotto", "name": LOTTO["name"], "id": next_id, "date": next_day.isoformat(), "slot": next_slot,
         "weekday": WEEKDAYS[next_day.weekday()], "jackpot": target["jackpot"] if is_rolldown else round(jackpot + step, -6), "jackpot2": 0,
         "tickets_est": target["tickets"] if is_rolldown else round(tickets, -3), "ev": ev, "verdict": label, "tickets": count, "sets": sets,
+        "crowd": round(crowd, 3),
         "status": status, "current_jackpot": jackpot, "trigger": LOTTO["trigger"], "draws_to": draws_to,
         "target": {"id": target_id, "date": target_day.isoformat(), "weekday": WEEKDAYS[target_day.weekday()], **target},
         "rolldown_days": days_seen, "rolldowns": book, "rows": rows, "latest": latest,
@@ -950,12 +1033,13 @@ def main():
         when = next_date(game, last_date)
         draw_id = last["id"] + 1
         rng = seeded("set", game, draw_id)
-        sets = [pick_filtered(rng, info["pool"], last["main"]) for _ in range(max(count, LIGHT_TICKETS))]
+        sets = pick_quiet(rng, game, max(count, LIGHT_TICKETS))
         next_rows.append({
             "game": game, "name": info["name"], "id": draw_id, "date": when.isoformat(),
             "weekday": WEEKDAYS[when.weekday()], "jackpot": round(est["jackpot"], -6),
             "jackpot2": round(est["jackpot2"], -6), "tickets_est": round(tickets, -4),
             "ev": ev, "verdict": label, "tickets": count, "sets": sets,
+            "crowd": round(mean(crowd_factor(game, x) for x in sets), 3),
         })
         latest[game] = {
             "id": last["id"], "date": last["date"], "weekday": WEEKDAYS[last_date.weekday()],
@@ -1007,6 +1091,9 @@ def main():
         "next": sorted(all_rows, key=lambda r: (r["date"], r["game"] != "lotto")), "latest": latest, "ev_history": ev_history,
         "rolldowns": lotto["rolldowns"], "rolldown_days": lotto["rolldown_days"], "lotto_fixed": round(lotto_fixed_ev()), "lotto_odds": {k: round(1 / v) for k, v in LOTTO_ODDS.items()},
         "lotto_breakeven": {str(j): round(0.95 * j * 1e9 / (TICKET - lotto_fixed_ev()), -4) for j in (13, 20, 30)},
+        "popularity": {g: {"draws": m["draws"], "r": m["r"], "validated": m["validated"], "least": [i + 1 for i in np.argsort(m["w"])[:8].tolist()],
+                           "most": [i + 1 for i in np.argsort(m["w"])[-8:][::-1].tolist()]}
+                       for g in POP_SHAPE if (m := popularity(g))},
         "breakeven": be, "tests": tests, "portfolio": portfolio, "accuracy": accuracy, "filter_check": filter_check(all_draws),
         "rules": {"ticket": TICKET, "play_pct": PLAY_PCT, "light_pct": LIGHT_PCT, "play_tickets": PLAY_TICKETS,
                   "light_tickets": LIGHT_TICKETS, "week_tickets": WEEK_TICKETS, "hot_window": HOT_WINDOW},
