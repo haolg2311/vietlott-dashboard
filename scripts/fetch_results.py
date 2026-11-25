@@ -94,13 +94,20 @@ def parse_minhchinh(t):
     return out
 
 
+def complete(r):
+    """Nguồn đã đăng đủ số người trúng. Ngay sau giờ quay, nguồn có thể mới có dãy số còn số người trúng bằng 0."""
+    return bool(r.get("g3") or (r.get("winners") or {}).get("kk"))
+
+
 def merge(rows, found, floor):
-    """Thêm kỳ mới, và thay kỳ đang thiếu số giải bằng bản đầy đủ. Không đụng kỳ đã đủ số liệu."""
+    """Thêm kỳ mới đã đủ số liệu, và thay kỳ đang thiếu số liệu bằng bản đầy đủ. Không đụng kỳ đã đủ số liệu."""
     by_id = {r["id"]: r for r in rows}
     added = []
     for i, r in sorted(found.items()):
+        if not complete(r):
+            continue
         old = by_id.get(i)
-        partial = old is not None and not (old.get("g3") or old.get("winners"))
+        partial = old is not None and not complete(old)
         if (old is None and i > floor) or partial:
             by_id[i] = r
             added.append(i)

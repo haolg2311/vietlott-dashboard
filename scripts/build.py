@@ -193,7 +193,7 @@ def sales_estimate(game, rows, next_jackpot):
     return nref * (next_jackpot / jref) ** sales_beta(game, rows)
 
 
-def est_next(game, rows):
+def est_next(game, rows, gap=1):
     """Jackpot kỳ tới bằng mức hiện tại cộng bình quân 2 bước tăng gần nhất của chu kỳ đang chạy.
 
     Bước tăng phụ thuộc mạnh vào doanh số, mà doanh số đổi hẳn sau mỗi lần nổ jackpot, nên không
@@ -218,7 +218,7 @@ def est_next(game, rows):
         steps = cycle[-2:] or firsts[-4:]
         step = mean(steps) if steps else 0
         base = last[key] if last[win_key] == 0 else (GAMES[game]["seed_jp"] if key == "jackpot" else 3e9)
-        out[key] = base + step
+        out[key] = base + step * gap
     return out
 
 
@@ -589,6 +589,8 @@ def lotto_block(draws, store, warnings, today):
             warnings.append(f"Lotto 5/35 kỳ {r['id']}: hai nguồn lệch nhau, đã bỏ kỳ này.")
             continue
         rows.append(r)
+    while rows and not (rows[-1].get("winners") or {}).get("kk"):  # kỳ nguồn chưa đăng đủ số người trúng
+        rows.pop()
     known = {x["id"] for x in store["rolldowns"]}
     row_of = {r["id"]: r for r in rows}
     for i, a in enumerate(rows):
@@ -929,6 +931,8 @@ def main():
                     warnings.append(f"{info['name']} kỳ {r['id']}: hai nguồn lệch nhau, đã bỏ kỳ này.")
             else:
                 rows.append(r)
+        while rows and not rows[-1].get("g3"):  # kỳ mới nguồn chưa đăng đủ số liệu thì coi như chưa có
+            rows.pop()
         valid_rows[game] = rows
         last = draws[-1]
         if not rows or rows[-1]["id"] != last["id"]:
@@ -939,7 +943,7 @@ def main():
         if not rows or rows[-1]["date"] < due_game(info["days"], now).isoformat():
             stale.append(info["name"])
 
-        est = est_next(game, rows)
+        est = est_next(game, rows, max(1, draws[-1]["id"] + 1 - rows[-1]["id"]) if rows else 1)
         tickets = sales_estimate(game, rows, est["jackpot"])
         ev = ticket_ev(game, est["jackpot"], est["jackpot2"], tickets)
         label, count = verdict(ev["pct"])
@@ -956,8 +960,8 @@ def main():
         latest[game] = {
             "id": last["id"], "date": last["date"], "weekday": WEEKDAYS[last_date.weekday()],
             "main": last["main"], "extra": last["extra"],
-            "jackpot": rows[-1]["jackpot"] if rows else None,
-            "jackpot_winners": rows[-1]["jackpot_winners"] if rows else None,
+            "jackpot": rows[-1]["jackpot"] if rows and rows[-1]["id"] == last["id"] else None,
+            "jackpot_winners": rows[-1]["jackpot_winners"] if rows and rows[-1]["id"] == last["id"] else None,
         }
         ev_history[game] = [
             {"id": r["id"], "date": r["date"], "jackpot": r["jackpot"], "winners": r["jackpot_winners"],
@@ -986,7 +990,8 @@ def main():
         "id": lotto["latest"]["id"], "date": lotto["latest"]["date"],
         "weekday": WEEKDAYS[date.fromisoformat(lotto["latest"]["date"]).weekday()],
         "main": lotto["latest"]["main"], "extra": lotto["latest"]["extra"],
-        "jackpot": lotto["rows"][-1]["jackpot"], "jackpot_winners": lotto["rows"][-1]["jackpot_winners"],
+        "jackpot": lotto["rows"][-1]["jackpot"] if lotto["rows"][-1]["id"] == lotto["latest"]["id"] else None,
+        "jackpot_winners": lotto["rows"][-1]["jackpot_winners"] if lotto["rows"][-1]["id"] == lotto["latest"]["id"] else None,
     }
     commentary_file = DATA / "commentary.json"
     if lotto["rows"][-1]["id"] < due_lotto(now):

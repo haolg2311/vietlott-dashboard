@@ -28,7 +28,7 @@
 
   function lastBlock(last) {
     return `<div class="picks"><h3>Kết quả kỳ trước, kỳ ${last.id}, ${day(last.date)} ${dm(last.date)}</h3>${balls(last.main, last.extra, 'sm')}
-      <p class="bar-note">${last.jackpot ? `Jackpot ${billions(last.jackpot)}, ` : ''}${last.jackpot_winners ? `${last.jackpot_winners} người trúng` : 'chưa có người trúng'}</p></div>`;
+      <p class="bar-note">${last.jackpot == null ? 'Đang chờ nguồn đăng jackpot và số người trúng' : `Jackpot ${billions(last.jackpot)}, ${last.jackpot_winners ? `${last.jackpot_winners} người trúng` : 'chưa có người trúng'}`}</p></div>`;
   }
 
   function lottoCard(n, last) {
